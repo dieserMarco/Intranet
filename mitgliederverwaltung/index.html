@@ -46,44 +46,56 @@
         <fieldset class="data-group">
           <legend>Persönliche Daten</legend>
           <div class="group-grid">
-            <div class="form-section"><label>Anrede</label><input type="text" id="anrede" disabled></div>
-            <div class="form-section"><label>Titel</label><input type="text" id="titel" disabled></div>
+            <div class="form-section"><label>Mitgliedsnummer</label><input type="text" id="member_no" disabled></div>
             <div class="form-section"><label>Vorname</label><input type="text" id="vorname" disabled></div>
             <div class="form-section"><label>Nachname</label><input type="text" id="nachname" disabled></div>
             <div class="form-section"><label>Geburtsdatum</label><input type="text" class="datepicker" id="geburtsdatum" disabled></div>
-            <div class="form-section"><label>Beruf</label><input type="text" id="beruf" disabled></div>
-            <div class="form-section"><label>Geburtsort</label><input type="text" id="geburtsort" disabled></div>
-            <div class="form-section"><label>Familienstand</label><input type="text" id="familienstand" disabled></div>
-            <div class="form-section"><label>Staatsbürgerschaft</label><input type="text" id="staatsbuergerschaft" disabled></div>
+            <div class="form-section"><label>Identifikationsnummer (Citizen ID)</label><input type="text" id="identifikationsnummer" disabled></div>
           </div>
         </fieldset>
 
         <fieldset class="data-group">
           <legend>Kontakt</legend>
           <div class="group-grid">
-            <div class="form-section"><label>Identifikationsnummer (Citizen ID)</label><input type="text" id="identifikationsnummer" disabled></div>
             <div class="form-section"><label>Telefonnummer</label><input type="tel" id="telefonnummer" disabled></div>
             <div class="form-section"><label>Forumsname</label><input type="text" id="forumsname" disabled></div>
             <div class="form-section"><label>Discord ID</label><input type="text" id="discord_id" disabled></div>
-            <div class="form-section field-span-2"><label>D-Mail (E-Mail)</label><input type="email" id="dmail" disabled></div>
+            <div class="form-section"><label>D-Mail (Discord Benutzername)</label><input type="text" id="dmail" disabled></div>
+            <div class="form-section field-span-2"><label>Login Mail</label><input type="email" id="login_mail" disabled></div>
           </div>
         </fieldset>
 
         <fieldset class="data-group">
-          <legend>Adresse & Bild</legend>
+          <legend>Adresse</legend>
           <div class="group-grid">
             <div class="form-section field-span-2"><label>Adresse</label><input type="text" id="adresse" disabled></div>
             <div class="form-section"><label>Postleitzahl</label><input type="text" id="postleitzahl" disabled></div>
             <div class="form-section"><label>Stadt</label><input type="text" id="stadt" disabled></div>
-            <div class="form-section field-span-2"><label>Personalbild URL</label><input type="url" id="personalbild_url" disabled></div>
           </div>
         </fieldset>
 
         <fieldset class="data-group">
-          <legend>Login-Daten</legend>
+          <legend>Dienstliche Daten</legend>
           <div class="group-grid">
-            <div class="form-section"><label>Login Mail</label><input type="email" id="login_mail" disabled></div>
-            <div class="form-section"><label>Password</label><input type="text" id="password" disabled></div>
+            <div class="form-section"><label>Aktueller Dienstgrad</label><input type="text" id="aktueller_dienstgrad" disabled></div>
+            <div class="form-section"><label>Funktion</label><input type="text" id="funktion" disabled></div>
+            <div class="form-section"><label>Dienstzuteilung</label><input type="text" id="dienstzuteilung" disabled></div>
+            <div class="form-section"><label>Instruktor</label>
+              <select id="is_instructor" disabled>
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+              </select>
+            </div>
+            <div class="form-section"><label>Special Unit</label>
+              <select id="has_special_unit" disabled>
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+              </select>
+            </div>
+            <div class="form-section"><label>Eintritt (created_at)</label><input type="text" id="created_at" disabled></div>
+            <div class="form-section"><label>Zuletzt geändert (updated_at)</label><input type="text" id="updated_at" disabled></div>
+            <div class="form-section"><label>Zuletzt bearbeitet von</label><input type="text" id="updated_by" value="Kommt mit Login-System" disabled></div>
+            <div class="form-section"><label>Password</label><input type="password" id="password_display" value="********" disabled></div>
           </div>
         </fieldset>
       </section>
@@ -91,25 +103,17 @@
 
     <section id="courseSection" class="course-section card">
       <h2>Kursübersicht (nur Anzeige)</h2>
-      <div class="section-header" id="generalModulesHeader">Allgemein</div>
-      <ul class="course-list" id="generalModules"></ul>
-      <div class="section-header" id="branddienstModulesHeader">Branddienst / Atemschutz</div>
-      <ul class="course-list" id="branddienstModules"></ul>
-      <div class="section-header" id="techModulesHeader">Technisch</div>
-      <ul class="course-list" id="techModules"></ul>
-      <div class="section-header" id="hazardModulesHeader">Schadstoff</div>
-      <ul class="course-list" id="hazardModules"></ul>
-      <div class="section-header" id="waterModulesHeader">Wasserdienst</div>
-      <ul class="course-list" id="waterModules"></ul>
-      <div class="section-header" id="emModulesHeader">Einsatzmaschinist</div>
-      <ul class="course-list" id="emModules"></ul>
-      <div class="section-header" id="officerModulesHeader">Führung / Chargen</div>
-      <ul class="course-list" id="officerModules"></ul>
+      <p class="subtitle">Kursdaten sind in dieser DB-Anbindung aktuell nicht hinterlegt.</p>
     </section>
   </div>
 
-  <datalist id="activeMembersList"></datalist>
-  <datalist id="trainersList"></datalist>
+  <div id="saveOverlay" class="save-overlay" aria-hidden="true">
+    <div class="save-modal">
+      <h3>Gespeichert</h3>
+      <p id="saveOverlayMessage">Änderungen wurden gespeichert.</p>
+      <button type="button" class="primary" onclick="closeSaveOverlay()">OK</button>
+    </div>
+  </div>
 
   <script src="script.js" defer></script>
 </body>
