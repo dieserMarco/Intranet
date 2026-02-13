@@ -1,220 +1,144 @@
-/********************* GLOBAL VARIABLEN *********************/
 let allRecords = [];
 let selectedRecord = null;
-let selectedRecordIndex = -1;
 let currentSuggestionIndex = -1;
-let activeMembers = [];
-let csvHeaders = [];
+let editingMode = false;
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydfJRfAAyFCQfHnxE3Ee5aSyiYgpf8yns8-hT9Uomk4QbRvqAj9MxyEtyogjpBn6eh/exec";
+const API_BASE = './api';
 
 $(document).ready(function () {
-  loadDataFromCSV();
+  loadMembers();
 
   $('#searchField').on('keydown', function (e) {
     const suggestions = $('#suggestions .suggestion-item');
+    if (!suggestions.length) return;
 
     if (e.key === 'ArrowDown') {
-      if (suggestions.length > 0) {
-        currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
-        suggestions.removeClass('selected');
-        suggestions.eq(currentSuggestionIndex).addClass('selected');
-        e.preventDefault();
-      }
+      currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
+      suggestions.removeClass('selected');
+      suggestions.eq(currentSuggestionIndex).addClass('selected');
+      e.preventDefault();
     } else if (e.key === 'ArrowUp') {
-      if (suggestions.length > 0) {
-        currentSuggestionIndex = (currentSuggestionIndex - 1 + suggestions.length) % suggestions.length;
-        suggestions.removeClass('selected');
-        suggestions.eq(currentSuggestionIndex).addClass('selected');
-        e.preventDefault();
-      }
-    } else if (e.key === 'Enter') {
-      if (currentSuggestionIndex >= 0 && suggestions.length > 0) {
-        suggestions.eq(currentSuggestionIndex).click();
-        currentSuggestionIndex = -1;
-        e.preventDefault();
-      }
+      currentSuggestionIndex = (currentSuggestionIndex - 1 + suggestions.length) % suggestions.length;
+      suggestions.removeClass('selected');
+      suggestions.eq(currentSuggestionIndex).addClass('selected');
+      e.preventDefault();
+    } else if (e.key === 'Enter' && currentSuggestionIndex >= 0) {
+      suggestions.eq(currentSuggestionIndex).click();
+      currentSuggestionIndex = -1;
+      e.preventDefault();
     }
   });
 
-  $('.datepicker').datepicker({ dateFormat: 'dd.mm.yy' });
+  $('.datepicker').datepicker({ dateFormat: 'yy-mm-dd' });
 });
 
-/******************** CSV Laden & Parsen ********************/
-function loadDataFromCSV() {
-  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJhQbJMxG8s7oSw__c97Z55koBtE2Dlgc0OYR8idpZtdTq3o9g7LbmyEve3KPNkV5yaRZGIHVjJPkk/pub?gid=294937836&single=true&output=csv';
+async function loadMembers() {
+  try {
+    const response = await fetch(`${API_BASE}/members.php`);
+    const payload = await response.json();
 
-  fetch(csvUrl)
-    .then(response => response.text())
-    .then(csvText => {
-      allRecords = parseCSV(csvText);
-      activeMembers = allRecords.filter(r => (r['Aktives Mitglied?'] || '').toLowerCase() === 'ja');
-      fillActiveMembersDatalist(activeMembers);
-
-      const trainerMembers = activeMembers.filter(r => (r['Ausbildner?'] || '').toLowerCase() === 'ja');
-      fillTrainersDatalist(trainerMembers);
-    })
-    .catch(err => console.error('Fehler beim Laden der CSV:', err));
-}
-
-function parseCSV(csvText) {
-  const lines = csvText.split(/\r?\n/).filter(line => line.trim().length);
-  if (!lines.length) return [];
-
-  csvHeaders = parseCSVLine(lines[0]);
-
-  return lines.slice(1).map(line => {
-    const values = parseCSVLine(line);
-    const obj = {};
-
-    csvHeaders.forEach((header, i) => {
-      obj[header.trim()] = (values[i] || '').trim();
-    });
-
-    return obj;
-  });
-}
-
-function parseCSVLine(line) {
-  const fields = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      fields.push(current);
-      current = '';
-    } else {
-      current += char;
+    if (!payload.ok) {
+      throw new Error(payload.error || 'Mitglieder konnten nicht geladen werden.');
     }
+
+    allRecords = payload.members || [];
+  } catch (error) {
+    console.error(error);
+    alert(`Fehler beim Laden der Mitglieder: ${error.message}`);
   }
-
-  fields.push(current);
-  return fields;
 }
 
-function fillActiveMembersDatalist(members) {
-  const datalist = $('#activeMembersList');
-  datalist.empty();
-
-  members.forEach(m => {
-    const name = `${getRecordValue(m, ['vorname','Vorname','Namen'])} ${getRecordValue(m, ['nachname','Nachname','Nachnamen'])}`.trim();
-    datalist.append(`<option value="${name}">`);
-  });
+function toBool(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  return ['1', 'ja', 'true', 'yes'].includes(String(value || '').toLowerCase());
 }
 
-function fillTrainersDatalist(ausbildner) {
-  const datalist = $('#trainersList');
-  datalist.empty();
-
-  ausbildner.forEach(m => {
-    const name = `${getRecordValue(m, ['vorname','Vorname','Namen'])} ${getRecordValue(m, ['nachname','Nachname','Nachnamen'])}`.trim();
-    datalist.append(`<option value="${name}">`);
-  });
+function boolTo01(value) {
+  return toBool(value) ? 1 : 0;
 }
 
-function getRecordValue(record, keys) {
-  for (const key of keys) {
-    if (record[key] !== undefined && record[key] !== null && String(record[key]).trim() !== '') {
-      return record[key];
-    }
-  }
-  return '';
-}
-
-/********************* Suche & Vorschläge *******************/
 function searchSuggestions() {
-  const query = $('#searchField').val().toLowerCase();
-  if (query.length < 2) {
+  const query = $('#searchField').val().trim().toLowerCase();
+  if (query.length < 1) {
     $('#suggestions').empty();
     return;
   }
 
-  const filtered = allRecords.filter(r =>
-    (r['Mitgliedsnummer'] && r['Mitgliedsnummer'].toLowerCase().includes(query)) ||
-    (getRecordValue(r, ['vorname','Vorname','Namen']).toLowerCase().includes(query)) ||
-    (getRecordValue(r, ['nachname','Nachname','Nachnamen']).toLowerCase().includes(query))
+  const filtered = allRecords.filter((r) =>
+    String(r.member_no || '').toLowerCase().includes(query) ||
+    String(r.vorname || '').toLowerCase().includes(query) ||
+    String(r.nachname || '').toLowerCase().includes(query)
   );
 
-  displaySuggestions(filtered);
-}
-
-function displaySuggestions(records) {
   const suggestionsBox = $('#suggestions');
   suggestionsBox.empty();
   currentSuggestionIndex = -1;
 
-  records.forEach(r => {
-    const vorname = getRecordValue(r, ['vorname','Vorname','Namen']);
-    const nachname = getRecordValue(r, ['nachname','Nachname','Nachnamen']);
-    const item = $(`<div class="suggestion-item">${r['Mitgliedsnummer'] || '-'} - ${vorname} ${nachname}</div>`);
+  filtered.slice(0, 20).forEach((record) => {
+    const item = $(`<div class="suggestion-item">${record.member_no || '-'} - ${record.vorname || ''} ${record.nachname || ''}</div>`);
     item.on('click', () => {
-      selectedRecord = Object.assign({}, r);
-      selectedRecordIndex = allRecords.indexOf(r);
-      if (selectedRecordIndex === -1) {
-        selectedRecordIndex = allRecords.findIndex(x => x['Mitgliedsnummer'] === r['Mitgliedsnummer']);
-      }
+      selectedRecord = { ...record };
       fillForm(selectedRecord);
       suggestionsBox.empty();
-      displayCourses(selectedRecord);
     });
     suggestionsBox.append(item);
   });
 }
 
-/**************** Formular füllen & Editing ****************/
 function fillForm(record) {
-  $('#anrede').val(getRecordValue(record, ['anrede', 'Anrede']));
-  $('#titel').val(getRecordValue(record, ['titel', 'Titel']));
-  $('#vorname').val(getRecordValue(record, ['vorname', 'Namen', 'Vorname']));
-  $('#nachname').val(getRecordValue(record, ['nachname', 'Nachnamen', 'Nachname']));
-  $('#geburtsdatum').val(getRecordValue(record, ['geburtsdatum', 'Geburtsdatum']));
-  $('#beruf').val(getRecordValue(record, ['beruf', 'Beruf']));
-  $('#geburtsort').val(getRecordValue(record, ['geburtsort', 'Geburtsort']));
-  $('#familienstand').val(getRecordValue(record, ['familienstand', 'Familienstand']));
-  $('#staatsbuergerschaft').val(getRecordValue(record, ['staatsburgerschaft', 'staatsbuergerschaft', 'Staatsbürgerschaft']));
+  $('#member_no').val(record.member_no || '');
+  $('#vorname').val(record.vorname || '');
+  $('#nachname').val(record.nachname || '');
+  $('#geburtsdatum').val(record.geburtsdatum || '');
+  $('#identifikationsnummer').val(record.identifikationsnummer || '');
 
-  $('#identifikationsnummer').val(getRecordValue(record, ['identifikationsnummer', 'Identifikationsnummer']));
-  $('#telefonnummer').val(getRecordValue(record, ['telefonnummer', 'Telefonnummer']));
-  $('#forumsname').val(getRecordValue(record, ['forumsname', 'Forumsname']));
-  $('#discord_id').val(getRecordValue(record, ['discord_id', 'Discord ID', 'DiscordID']));
-  $('#dmail').val(getRecordValue(record, ['dmail', 'D-Mail Adresse', 'email', 'E-Mail']));
+  $('#telefonnummer').val(record.telefonnummer || '');
+  $('#forumsname').val(record.forumsname || '');
+  $('#discord_id').val(record.discord_id || '');
+  $('#dmail').val(record.dmail || '');
+  $('#login_mail').val(record.login_mail || '');
 
-  $('#adresse').val(getRecordValue(record, ['adresse', 'Adresse']));
-  $('#postleitzahl').val(getRecordValue(record, ['postleitzahl', 'Postleitzahl', 'plz']));
-  $('#stadt').val(getRecordValue(record, ['stadt', 'Stadt']));
-  $('#personalbild_url').val(getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']));
+  $('#adresse').val(record.adresse || '');
+  $('#postleitzahl').val(record.postleitzahl || '');
+  $('#stadt').val(record.stadt || '');
 
-  $('#login_mail').val(getRecordValue(record, ['login_mail', 'Login Mail']));
-  $('#password').val(getRecordValue(record, ['password', 'Password']));
+  $('#aktueller_dienstgrad').val(record.aktueller_dienstgrad || '');
+  $('#funktion').val(record.funktion || '');
+  $('#dienstzuteilung').val(record.dienstzuteilung || '');
+  $('#is_instructor').val(boolTo01(record.is_instructor));
+  $('#has_special_unit').val(boolTo01(record.has_special_unit));
+  $('#created_at').val(record.created_at || '');
+  $('#updated_at').val(record.updated_at || '');
 
-  const personalbildUrl = getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']);
-  if (personalbildUrl) {
-    $('#personalImage').html(`<img src="${personalbildUrl}" alt="Personalbild">`);
-  } else {
-    $('#personalImage').text('Foto');
-  }
-
-  const dg = getRecordValue(record, ['Aktueller Dienstgrad']);
+  const dg = record.aktueller_dienstgrad;
   if (dg && dienstgradBilder[dg]) {
     $('#dienstgradImage').html(`<img src="${dienstgradBilder[dg]}" alt="${dg}">`);
   } else {
     $('#dienstgradImage').text('Dienstgrad');
   }
 
-  setActiveStatus((record['Aktives Mitglied?'] || '').toLowerCase() === 'ja');
+  $('#personalImage').text('Foto');
+  setActiveStatus(toBool(record.aktives_mitglied));
   updateHeaderTitle(record);
+  setEditMode(false);
+}
 
-  $('.content input, .content select').prop('disabled', true);
+function setEditMode(enabled) {
+  editingMode = enabled;
+  $('.content input, .content select').prop('disabled', !enabled);
+  $('#created_at, #updated_at, #password_display').prop('disabled', true);
+
+  $('#statusToggle')
+    .prop('disabled', !enabled)
+    .css('cursor', enabled ? 'pointer' : 'default')
+    .off('click.__status');
+
+  if (enabled) {
+    $('#statusToggle').on('click.__status', toggleActiveStatus);
+  }
+
+  $('#editStammdatenButton').text(enabled ? 'Stammdaten speichern' : 'Stammdaten bearbeiten');
 }
 
 function setActiveStatus(isActive) {
@@ -224,197 +148,69 @@ function setActiveStatus(isActive) {
 }
 
 function toggleActiveStatus() {
-  const btn = $('#statusToggle');
-  setActiveStatus(!btn.hasClass('active'));
+  setActiveStatus(!$('#statusToggle').hasClass('active'));
 }
 
 function updateHeaderTitle(record) {
-  const vorname = getRecordValue(record, ['vorname', 'Namen', 'Vorname']);
-  const nachname = getRecordValue(record, ['nachname', 'Nachnamen', 'Nachname']);
-  const title = `${record['Mitgliedsnummer'] || ''} - ${record['Aktueller Dienstgrad'] || ''} ${vorname} ${nachname}`;
+  const title = `${record.member_no || ''} - ${record.aktueller_dienstgrad || ''} ${record.vorname || ''} ${record.nachname || ''}`;
   $('#headerTitle').text(`[${title.trim()}]`);
 }
 
-/**************** Kurs-Konfiguration & Anzeige *************/
-const coursesConfig = {
-  'AKL-Test': { category: 'generalModules', hasTrainer: false, hasInfo: false, hasCompleted: false, hasWithdrawn: false, hasValidUntil: true },
-  'ÖFAST': { category: 'generalModules', hasTrainer: false, hasInfo: false, hasCompleted: false, hasWithdrawn: false, hasValidUntil: true },
-  'GFÜ': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'FWBW': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'BD10': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'BD20': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'BD70': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'BD80': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'AT': { category: 'branddienstModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TE10': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TE20': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TE30': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TE40': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'T1': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TBS20': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'TBS30': { category: 'techModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'EMA B': { category: 'emModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'EMA C': { category: 'emModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'EMA C2': { category: 'emModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'FÜ10': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'ASM10': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'FÜ20': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'NRD10': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'NRD20': { category: 'officerModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'SD10': { category: 'hazardModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'SD20': { category: 'hazardModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'SD25': { category: 'hazardModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'SD35': { category: 'hazardModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'SD40': { category: 'hazardModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'WD10': { category: 'waterModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'WD20': { category: 'waterModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'WFBB1': { category: 'waterModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true },
-  'WFBB2': { category: 'waterModules', hasTrainer: true, hasInfo: true, hasCompleted: true, hasWithdrawn: true }
-};
-
-const courseCategories = {
-  generalModules: ['AKL-Test', 'ÖFAST', 'GFÜ'],
-  branddienstModules: ['FWBW', 'AT', 'BD10', 'BD20', 'BD70', 'BD80'],
-  techModules: ['TE10', 'TE20', 'TE30', 'TE40', 'T1', 'TBS20', 'TBS30'],
-  hazardModules: ['SD10', 'SD20', 'SD25', 'SD35', 'SD40'],
-  waterModules: ['WD10', 'WD20', 'WFBB1', 'WFBB2'],
-  emModules: ['EMA B', 'EMA C', 'EMA C2'],
-  officerModules: ['FÜ10', 'ASM10', 'FÜ20', 'NRD10', 'NRD20']
-};
-
-function makeCourseCard(courseName, record) {
-  const cfg = coursesConfig[courseName] || {};
-  const date = record[`${courseName} - Datum`] || '';
-  const trainer = cfg.hasTrainer ? (record[`${courseName} - Ausbildner`] || '') : '';
-  const info = cfg.hasInfo ? (record[`${courseName} - Information`] || '') : '';
-  const validUntil = cfg.hasValidUntil ? (record[`${courseName} - GÜLTIG BIS`] || '') : '';
-  const completed = cfg.hasCompleted ? ((record[`${courseName} - Absolviert`] || '').toLowerCase() === 'ja') : false;
-  const withdrawn = cfg.hasWithdrawn ? (record[`${courseName} - Zurückgezogen`] || '') : '';
-
-  const card = $('<li class="course-card"></li>');
-  card.append(`<h4>${courseName}</h4>`);
-
-  const details = [];
-  if (date) details.push(`Datum: ${date}`);
-  if (validUntil) details.push(`Gültig bis: ${validUntil}`);
-  if (trainer) details.push(`Ausbildner: ${trainer}`);
-  if (info) details.push(`Info: ${info}`);
-  if (withdrawn) details.push(`Zurückgezogen: ${withdrawn}`);
-  if (details.length) card.append(`<p class="course-meta">${details.join(' • ')}</p>`);
-
-  if (completed) card.append('<span class="course-chip">Absolviert</span>');
-  if (withdrawn) card.addClass('withdrawn');
-
-  return card;
-}
-
-function displayCourses(record) {
-  for (const id of Object.keys(courseCategories)) {
-    $(`#${id}`).empty();
+async function activateStammdatenEditingMode() {
+  if (!selectedRecord) {
+    alert('Bitte zuerst ein Mitglied auswählen.');
+    return;
   }
 
-  for (const [category, list] of Object.entries(courseCategories)) {
-    const container = $(`#${category}`);
+  if (!editingMode) {
+    setEditMode(true);
+    return;
+  }
 
-    list.forEach(courseName => {
-      const cfg = coursesConfig[courseName] || {};
-      let show = false;
+  const payload = {
+    id: selectedRecord.id,
+    member_no: $('#member_no').val().trim(),
+    vorname: $('#vorname').val().trim(),
+    nachname: $('#nachname').val().trim(),
+    geburtsdatum: $('#geburtsdatum').val().trim(),
+    identifikationsnummer: $('#identifikationsnummer').val().trim(),
+    forumsname: $('#forumsname').val().trim(),
+    telefonnummer: $('#telefonnummer').val().trim(),
+    discord_id: $('#discord_id').val().trim(),
+    dmail: $('#dmail').val().trim(),
+    adresse: $('#adresse').val().trim(),
+    postleitzahl: $('#postleitzahl').val().trim(),
+    stadt: $('#stadt').val().trim(),
+    login_mail: $('#login_mail').val().trim(),
+    aktueller_dienstgrad: $('#aktueller_dienstgrad').val().trim(),
+    funktion: $('#funktion').val().trim(),
+    dienstzuteilung: $('#dienstzuteilung').val().trim(),
+    aktives_mitglied: $('#statusToggle').hasClass('active') ? 1 : 0,
+    is_instructor: Number($('#is_instructor').val() || 0),
+    has_special_unit: Number($('#has_special_unit').val() || 0)
+  };
 
-      if (cfg.hasCompleted) {
-        show = ((record[`${courseName} - Absolviert`] || '').toLowerCase() === 'ja');
-      } else if (cfg.hasValidUntil) {
-        show = !!record[`${courseName} - GÜLTIG BIS`];
-      } else {
-        show = !!record[`${courseName} - Datum`];
-      }
-
-      if (!show) return;
-      container.append(makeCourseCard(courseName, record));
+  try {
+    const response = await fetch(`${API_BASE}/members.php`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+
+    const result = await response.json();
+    if (!result.ok) throw new Error(result.error || 'Speichern fehlgeschlagen.');
+
+    await loadMembers();
+    const refreshed = allRecords.find((item) => Number(item.id) === Number(selectedRecord.id));
+    selectedRecord = refreshed || payload;
+    fillForm(selectedRecord);
+    alert('Mitglied erfolgreich gespeichert.');
+  } catch (error) {
+    console.error(error);
+    alert(`Fehler beim Speichern: ${error.message}`);
   }
 }
 
-function activateStammdatenEditingMode() {
-  const fields = document.querySelectorAll('.content input, .content select');
-  const isEditing = fields[0] && !fields[0].disabled;
-
-  if (!isEditing) {
-    fields.forEach(f => { f.disabled = false; });
-
-    $('#statusToggle')
-      .prop('disabled', false)
-      .css('cursor', 'pointer')
-      .off('click.__status')
-      .on('click.__status', toggleActiveStatus);
-
-    $('#vorname, #nachname')
-      .off('input.__live')
-      .on('input.__live', function () {
-        const tempRecord = Object.assign({}, selectedRecord);
-        tempRecord['vorname'] = $('#vorname').val();
-        tempRecord['nachname'] = $('#nachname').val();
-        updateHeaderTitle(tempRecord);
-      });
-
-    document.getElementById('editStammdatenButton').textContent = 'Stammdaten speichern';
-  } else {
-    fields.forEach(f => { f.disabled = true; });
-
-    $('#statusToggle')
-      .prop('disabled', true)
-      .css('cursor', 'default')
-      .off('click.__status');
-
-    $('#vorname, #nachname').off('input.__live');
-
-    document.getElementById('editStammdatenButton').textContent = 'Stammdaten bearbeiten';
-    saveStammdaten();
-  }
-}
-
-function saveStammdaten() {
-  if (!selectedRecord) return;
-
-  selectedRecord['anrede'] = $('#anrede').val() || '';
-  selectedRecord['titel'] = $('#titel').val() || '';
-  selectedRecord['vorname'] = $('#vorname').val() || '';
-  selectedRecord['nachname'] = $('#nachname').val() || '';
-  selectedRecord['geburtsdatum'] = $('#geburtsdatum').val() || '';
-  selectedRecord['beruf'] = $('#beruf').val() || '';
-  selectedRecord['geburtsort'] = $('#geburtsort').val() || '';
-  selectedRecord['familienstand'] = $('#familienstand').val() || '';
-  selectedRecord['staatsburgerschaft'] = $('#staatsbuergerschaft').val() || '';
-
-  selectedRecord['identifikationsnummer'] = $('#identifikationsnummer').val() || '';
-  selectedRecord['telefonnummer'] = $('#telefonnummer').val() || '';
-  selectedRecord['forumsname'] = $('#forumsname').val() || '';
-  selectedRecord['discord_id'] = $('#discord_id').val() || '';
-  selectedRecord['dmail'] = $('#dmail').val() || '';
-
-  selectedRecord['adresse'] = $('#adresse').val() || '';
-  selectedRecord['postleitzahl'] = $('#postleitzahl').val() || '';
-  selectedRecord['stadt'] = $('#stadt').val() || '';
-  selectedRecord['personalbild_url'] = $('#personalbild_url').val() || '';
-
-  selectedRecord['login_mail'] = $('#login_mail').val() || '';
-  selectedRecord['password'] = $('#password').val() || '';
-
-  selectedRecord['Aktives Mitglied?'] = $('#statusToggle').hasClass('active') ? 'Ja' : 'Nein';
-
-  if (selectedRecordIndex >= 0 && selectedRecordIndex < allRecords.length) {
-    allRecords[selectedRecordIndex] = selectedRecord;
-  } else {
-    const fallbackIndex = allRecords.findIndex(r => r['Mitgliedsnummer'] === selectedRecord['Mitgliedsnummer']);
-    if (fallbackIndex !== -1) {
-      allRecords[fallbackIndex] = selectedRecord;
-      selectedRecordIndex = fallbackIndex;
-    }
-  }
-
-  uploadCSVToGoogle();
-}
-
-/********************* Dienstgrad-Bilder *******************/
 const dienstgradBilder = {
   "PFM": "https://i.postimg.cc/ZRjqKjH4/Dgrd-pfm-noe-svg.png",
   "FM": "https://i.postimg.cc/hjqrx4bs/Dgrd-fm-noe-svg.png",
@@ -444,57 +240,3 @@ const dienstgradBilder = {
   "VI": "https://i.postimg.cc/DzvR9KMx/Dgrd-vi-noe-svg.png",
   "VR": "https://i.postimg.cc/V6SZwsBW/Dgrd-vr-noe-svg.png"
 };
-
-/********************** CSV Upload ************************/
-function uploadCSVToGoogle() {
-  const csvContent = generateCSV(allRecords);
-
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ csv: csvContent })
-  })
-    .then(response => response.text())
-    .then(data => {
-      console.log('Antwort vom Google-Script:', data);
-    })
-    .catch(err => {
-      console.error('Fehler beim Hochladen:', err);
-    });
-}
-
-function generateCSV(records) {
-  records.forEach(record => {
-    for (const key in record) {
-      if (!csvHeaders.includes(key)) csvHeaders.push(key);
-    }
-  });
-
-  Object.keys(coursesConfig).forEach(c => {
-    const fields = [`${c} - Datum`];
-    if (coursesConfig[c].hasValidUntil) fields.push(`${c} - GÜLTIG BIS`);
-    if (coursesConfig[c].hasTrainer) fields.push(`${c} - Ausbildner`);
-    if (coursesConfig[c].hasInfo) fields.push(`${c} - Information`);
-    if (coursesConfig[c].hasCompleted) fields.push(`${c} - Absolviert`);
-    if (coursesConfig[c].hasWithdrawn) fields.push(`${c} - Zurückgezogen`);
-
-    fields.forEach(f => {
-      if (!csvHeaders.includes(f)) csvHeaders.push(f);
-    });
-  });
-
-  let csv = csvHeaders.join(',') + '\n';
-  records.forEach(record => {
-    const row = csvHeaders.map(header => {
-      let value = record[header] || '';
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        value = '"' + value.replace(/"/g, '""') + '"';
-      }
-      return value;
-    }).join(',');
-
-    csv += row + '\n';
-  });
-
-  return csv;
-}
