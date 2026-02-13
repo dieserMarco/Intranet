@@ -3,113 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mitgliederverwaltung FFWN</title>
-
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
-  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-
+  <title>Token Generator FFWN</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="member-management">
-  <div class="app-shell">
+  <div class="app-shell token-shell">
     <header class="header">
       <div class="brand-wrap">
-        <img class="brand-logo" src="../mitgliederanmeldung/resources/logo.png" alt="Feuerwehr Logo">
+        <img class="brand-logo" src="resources/logo.png" alt="Feuerwehr Logo">
         <div>
-          <h1 id="headerTitle">Mitgliederverwaltung</h1>
-          <p class="subtitle">Suche, bearbeite Stammdaten und prüfe absolvierte Kurse.</p>
+          <h1>Token Generator</h1>
+          <p class="subtitle">Erstellt einen Einmaltoken für die Mitgliederanmeldung in der Feuerwehr Wiener Neustadt.</p>
         </div>
-      </div>
-
-      <div class="search-wrap">
-        <label for="searchField">Mitglied suchen</label>
-        <input type="text" id="searchField" placeholder="Mitgliedsnummer, Vorname, Nachname" oninput="searchSuggestions()" autocomplete="off">
-        <div id="suggestions" class="suggestions"></div>
       </div>
     </header>
 
-    <main class="content-wrapper">
-      <aside class="sidebar card">
-        <div class="image-section" id="personalImage">Foto</div>
-        <div class="image-section dienstgrad-section" id="dienstgradImage">Dienstgrad</div>
+    <main class="card token-card">
+      <h2>Neuen Token erstellen</h2>
 
-        <div class="sidebar-buttons">
-          <button id="statusToggle" class="status-toggle inactive" disabled>Inaktiv</button>
-          <button id="editStammdatenButton" class="primary" onclick="activateStammdatenEditingMode()">Stammdaten bearbeiten</button>
+      <fieldset class="data-group token-output-group">
+        <legend>Generierter Token</legend>
+        <div class="token-result-row">
+          <input type="text" id="tokenOutput" readonly placeholder="Hier erscheint dein Token">
+          <button id="copyButton" type="button" disabled>Kopieren</button>
         </div>
-      </aside>
+      </fieldset>
 
-      <section class="content card">
-        <h2>Stammdaten</h2>
+      <div class="form-section token-actions">
+        <button id="generateButton" class="primary" type="button">Token erstellen</button>
+      </div>
 
-        <fieldset class="data-group">
-          <legend>Persönliche Daten</legend>
-          <div class="group-grid">
-            <div class="form-section"><label>Anrede</label><input type="text" id="anrede" disabled></div>
-            <div class="form-section"><label>Titel</label><input type="text" id="titel" disabled></div>
-            <div class="form-section"><label>Vorname</label><input type="text" id="vorname" disabled></div>
-            <div class="form-section"><label>Nachname</label><input type="text" id="nachname" disabled></div>
-            <div class="form-section"><label>Geburtsdatum</label><input type="text" class="datepicker" id="geburtsdatum" disabled></div>
-            <div class="form-section"><label>Beruf</label><input type="text" id="beruf" disabled></div>
-            <div class="form-section"><label>Geburtsort</label><input type="text" id="geburtsort" disabled></div>
-            <div class="form-section"><label>Familienstand</label><input type="text" id="familienstand" disabled></div>
-            <div class="form-section"><label>Staatsbürgerschaft</label><input type="text" id="staatsbuergerschaft" disabled></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="data-group">
-          <legend>Kontakt</legend>
-          <div class="group-grid">
-            <div class="form-section"><label>Identifikationsnummer (Citizen ID)</label><input type="text" id="identifikationsnummer" disabled></div>
-            <div class="form-section"><label>Telefonnummer</label><input type="tel" id="telefonnummer" disabled></div>
-            <div class="form-section"><label>Forumsname</label><input type="text" id="forumsname" disabled></div>
-            <div class="form-section"><label>Discord ID</label><input type="text" id="discord_id" disabled></div>
-            <div class="form-section field-span-2"><label>D-Mail (E-Mail)</label><input type="email" id="dmail" disabled></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="data-group">
-          <legend>Adresse & Bild</legend>
-          <div class="group-grid">
-            <div class="form-section field-span-2"><label>Adresse</label><input type="text" id="adresse" disabled></div>
-            <div class="form-section"><label>Postleitzahl</label><input type="text" id="postleitzahl" disabled></div>
-            <div class="form-section"><label>Stadt</label><input type="text" id="stadt" disabled></div>
-            <div class="form-section field-span-2"><label>Personalbild URL</label><input type="url" id="personalbild_url" disabled></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="data-group">
-          <legend>Login-Daten</legend>
-          <div class="group-grid">
-            <div class="form-section"><label>Login Mail</label><input type="email" id="login_mail" disabled></div>
-            <div class="form-section"><label>Password</label><input type="text" id="password" disabled></div>
-          </div>
-        </fieldset>
-      </section>
+      <p id="statusMessage" class="status-message" aria-live="polite"></p>
     </main>
-
-    <section id="courseSection" class="course-section card">
-      <h2>Kursübersicht (nur Anzeige)</h2>
-      <div class="section-header" id="generalModulesHeader">Allgemein</div>
-      <ul class="course-list" id="generalModules"></ul>
-      <div class="section-header" id="branddienstModulesHeader">Branddienst / Atemschutz</div>
-      <ul class="course-list" id="branddienstModules"></ul>
-      <div class="section-header" id="techModulesHeader">Technisch</div>
-      <ul class="course-list" id="techModules"></ul>
-      <div class="section-header" id="hazardModulesHeader">Schadstoff</div>
-      <ul class="course-list" id="hazardModules"></ul>
-      <div class="section-header" id="waterModulesHeader">Wasserdienst</div>
-      <ul class="course-list" id="waterModules"></ul>
-      <div class="section-header" id="emModulesHeader">Einsatzmaschinist</div>
-      <ul class="course-list" id="emModules"></ul>
-      <div class="section-header" id="officerModulesHeader">Führung / Chargen</div>
-      <ul class="course-list" id="officerModules"></ul>
-    </section>
   </div>
-
-  <datalist id="activeMembersList"></datalist>
-  <datalist id="trainersList"></datalist>
 
   <script src="script.js" defer></script>
 </body>
