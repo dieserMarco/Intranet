@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/db.php';
+require __DIR__ . '/auth.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     json_response(['ok' => false, 'error' => 'Nur POST erlaubt.'], 405);
