@@ -150,7 +150,7 @@ select:disabled {
 }
 
 .image-section {
-  min-height: 170px;
+  min-height: 230px;
   border: 1px dashed var(--line);
   border-radius: 12px;
   display: flex;
@@ -164,7 +164,7 @@ select:disabled {
 
 .image-section img {
   max-width: 100%;
-  max-height: 210px;
+  max-height: 300px;
   border-radius: 10px;
   object-fit: contain;
 }
@@ -263,130 +263,6 @@ button:disabled {
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 0.86rem;
-}
-
-}
-
-.suggestion-item {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  cursor: pointer;
-}
-
-.suggestion-item:last-child { border-bottom: none; }
-.suggestion-item:hover,
-.suggestion-item.selected { background: rgba(255,75,75,0.2); }
-
-.content-wrapper {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 16px;
-}
-
-.sidebar,
-.content,
-.course-section {
-  padding: 16px;
-}
-
-.image-section {
-  min-height: 170px;
-  border: 1px dashed var(--line);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  margin-bottom: 12px;
-  text-align: center;
-  padding: 8px;
-}
-
-.image-section img {
-  max-width: 100%;
-  max-height: 210px;
-  border-radius: 10px;
-  object-fit: contain;
-}
-
-.sidebar-buttons {
-  display: grid;
-  gap: 8px;
-}
-
-button {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-weight: 700;
-  color: var(--text);
-  background: rgba(255,255,255,0.1);
-  cursor: pointer;
-}
-
-button.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border: none;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.status-toggle.active {
-  background: rgba(34,197,94,0.25);
-  border-color: rgba(34,197,94,0.35);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.checkbox-section {
-  align-self: end;
-}
-
-.checkbox-section input {
-  width: 20px;
-  height: 20px;
-}
-
-.section-header {
-  margin-top: 14px;
-  margin-bottom: 8px;
-  font-weight: 800;
-  color: rgba(255, 201, 201, 0.95);
-}
-
-.course-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.course-card {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px;
-  background: rgba(0,0,0,0.22);
-}
-
-.course-card h4 {
-  margin: 0 0 8px;
-}
-
-.course-meta {
-  margin: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.course-meta dd {
-  margin: 0;
-  font-size: 0.92rem;
 }
 
 .course-chip {

@@ -1,6 +1,7 @@
 /********************* GLOBAL VARIABLEN *********************/
 let allRecords = [];
 let selectedRecord = null;
+let selectedRecordIndex = -1;
 let currentSuggestionIndex = -1;
 let activeMembers = [];
 let csvHeaders = [];
@@ -37,7 +38,6 @@ $(document).ready(function () {
   });
 
   $('.datepicker').datepicker({ dateFormat: 'dd.mm.yy' });
-  $('#ausbildnerEditContainer').hide();
 });
 
 /******************** CSV Laden & Parsen ********************/
@@ -107,7 +107,7 @@ function fillActiveMembersDatalist(members) {
   datalist.empty();
 
   members.forEach(m => {
-    const name = `${m['Namen'] || ''} ${m['Nachnamen'] || ''}`.trim();
+    const name = `${getRecordValue(m, ['vorname','Vorname','Namen'])} ${getRecordValue(m, ['nachname','Nachname','Nachnamen'])}`.trim();
     datalist.append(`<option value="${name}">`);
   });
 }
@@ -117,7 +117,7 @@ function fillTrainersDatalist(ausbildner) {
   datalist.empty();
 
   ausbildner.forEach(m => {
-    const name = `${m['Namen'] || ''} ${m['Nachnamen'] || ''}`.trim();
+    const name = `${getRecordValue(m, ['vorname','Vorname','Namen'])} ${getRecordValue(m, ['nachname','Nachname','Nachnamen'])}`.trim();
     datalist.append(`<option value="${name}">`);
   });
 }
@@ -141,8 +141,8 @@ function searchSuggestions() {
 
   const filtered = allRecords.filter(r =>
     (r['Mitgliedsnummer'] && r['Mitgliedsnummer'].toLowerCase().includes(query)) ||
-    (r['Namen'] && r['Namen'].toLowerCase().includes(query)) ||
-    (r['Nachnamen'] && r['Nachnamen'].toLowerCase().includes(query))
+    (getRecordValue(r, ['vorname','Vorname','Namen']).toLowerCase().includes(query)) ||
+    (getRecordValue(r, ['nachname','Nachname','Nachnamen']).toLowerCase().includes(query))
   );
 
   displaySuggestions(filtered);
@@ -154,9 +154,15 @@ function displaySuggestions(records) {
   currentSuggestionIndex = -1;
 
   records.forEach(r => {
-    const item = $(`<div class="suggestion-item">${r['Mitgliedsnummer']} - ${r['Namen']} ${r['Nachnamen']}</div>`);
+    const vorname = getRecordValue(r, ['vorname','Vorname','Namen']);
+    const nachname = getRecordValue(r, ['nachname','Nachname','Nachnamen']);
+    const item = $(`<div class="suggestion-item">${r['Mitgliedsnummer'] || '-'} - ${vorname} ${nachname}</div>`);
     item.on('click', () => {
       selectedRecord = Object.assign({}, r);
+      selectedRecordIndex = allRecords.indexOf(r);
+      if (selectedRecordIndex === -1) {
+        selectedRecordIndex = allRecords.findIndex(x => x['Mitgliedsnummer'] === r['Mitgliedsnummer']);
+      }
       fillForm(selectedRecord);
       suggestionsBox.empty();
       displayCourses(selectedRecord);
@@ -194,30 +200,6 @@ function fillForm(record) {
   const personalbildUrl = getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']);
   if (personalbildUrl) {
     $('#personalImage').html(`<img src="${personalbildUrl}" alt="Personalbild">`);
-  $('#mitgliedsnummer').val(record['Mitgliedsnummer'] || '');
-  $('#anrede').val(record['Anrede'] || '');
-  $('#titel').val(record['Titel'] || '');
-  $('#namen').val(record['Namen'] || '');
-  $('#nachnamen').val(record['Nachnamen'] || '');
-  $('#geburtsdatum').val(record['Geburtsdatum'] || '');
-  $('#beruf').val(record['Beruf'] || '');
-  $('#geburtsort').val(record['Geburtsort'] || '');
-  $('#familienstand').val(record['Familienstand'] || '');
-  $('#staatsbuergerschaft').val(record['Staatsbürgerschaft'] || '');
-  $('#identifikationsnummer').val(record['Identifikationsnummer'] || '');
-  $('#telefonnummer').val(record['Telefonnummer'] || '');
-  $('#forumsname').val(record['Forumsname'] || '');
-  $('#adresse').val(record['Adresse'] || '');
-  $('#plz').val(record['Postleitzahl'] || '');
-  $('#stadt').val(record['Stadt'] || '');
-  $('#email').val(record['D-Mail Adresse'] || '');
-  $('#abgemeldet_grund').val(record['Abgemeldet Grund'] || '');
-  $('#dienstgrad').val(record['Aktueller Dienstgrad'] || '');
-  $('#beforderung').val(record['Letzte Beförderung'] || '');
-  $('#funktion').val(record['Funktion'] || '');
-
-  if (record['Personalbild']) {
-    $('#personalImage').html(`<img src="${record['Personalbild']}" alt="Personalbild">`);
   } else {
     $('#personalImage').text('Foto');
   }
@@ -369,8 +351,8 @@ function activateStammdatenEditingMode() {
       .off('input.__live')
       .on('input.__live', function () {
         const tempRecord = Object.assign({}, selectedRecord);
-        tempRecord['Namen'] = $('#vorname').val();
-        tempRecord['Nachnamen'] = $('#nachname').val();
+        tempRecord['vorname'] = $('#vorname').val();
+        tempRecord['nachname'] = $('#nachname').val();
         updateHeaderTitle(tempRecord);
       });
 
@@ -419,9 +401,14 @@ function saveStammdaten() {
 
   selectedRecord['Aktives Mitglied?'] = $('#statusToggle').hasClass('active') ? 'Ja' : 'Nein';
 
-  const index = allRecords.findIndex(r => r['Mitgliedsnummer'] === selectedRecord['Mitgliedsnummer']);
-  if (index !== -1) {
-    allRecords[index] = selectedRecord;
+  if (selectedRecordIndex >= 0 && selectedRecordIndex < allRecords.length) {
+    allRecords[selectedRecordIndex] = selectedRecord;
+  } else {
+    const fallbackIndex = allRecords.findIndex(r => r['Mitgliedsnummer'] === selectedRecord['Mitgliedsnummer']);
+    if (fallbackIndex !== -1) {
+      allRecords[fallbackIndex] = selectedRecord;
+      selectedRecordIndex = fallbackIndex;
+    }
   }
 
   uploadCSVToGoogle();
