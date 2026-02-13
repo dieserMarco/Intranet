@@ -42,6 +42,53 @@
 
       <section class="content card">
         <h2>Stammdaten</h2>
+
+        <fieldset class="data-group">
+          <legend>Persönliche Daten</legend>
+          <div class="group-grid">
+            <div class="form-section"><label>Anrede</label><input type="text" id="anrede" disabled></div>
+            <div class="form-section"><label>Titel</label><input type="text" id="titel" disabled></div>
+            <div class="form-section"><label>Vorname</label><input type="text" id="vorname" disabled></div>
+            <div class="form-section"><label>Nachname</label><input type="text" id="nachname" disabled></div>
+            <div class="form-section"><label>Geburtsdatum</label><input type="text" class="datepicker" id="geburtsdatum" disabled></div>
+            <div class="form-section"><label>Beruf</label><input type="text" id="beruf" disabled></div>
+            <div class="form-section"><label>Geburtsort</label><input type="text" id="geburtsort" disabled></div>
+            <div class="form-section"><label>Familienstand</label><input type="text" id="familienstand" disabled></div>
+            <div class="form-section"><label>Staatsbürgerschaft</label><input type="text" id="staatsbuergerschaft" disabled></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="data-group">
+          <legend>Kontakt</legend>
+          <div class="group-grid">
+            <div class="form-section"><label>Identifikationsnummer (Citizen ID)</label><input type="text" id="identifikationsnummer" disabled></div>
+            <div class="form-section"><label>Telefonnummer</label><input type="tel" id="telefonnummer" disabled></div>
+            <div class="form-section"><label>Forumsname</label><input type="text" id="forumsname" disabled></div>
+            <div class="form-section"><label>Discord ID</label><input type="text" id="discord_id" disabled></div>
+            <div class="form-section field-span-2"><label>D-Mail (E-Mail)</label><input type="email" id="dmail" disabled></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="data-group">
+          <legend>Adresse & Bild</legend>
+          <div class="group-grid">
+            <div class="form-section field-span-2"><label>Adresse</label><input type="text" id="adresse" disabled></div>
+            <div class="form-section"><label>Postleitzahl</label><input type="text" id="postleitzahl" disabled></div>
+            <div class="form-section"><label>Stadt</label><input type="text" id="stadt" disabled></div>
+            <div class="form-section field-span-2"><label>Personalbild URL</label><input type="url" id="personalbild_url" disabled></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="data-group">
+          <legend>Login-Daten</legend>
+          <div class="group-grid">
+            <div class="form-section"><label>Login Mail</label><input type="email" id="login_mail" disabled></div>
+            <div class="form-section"><label>Password</label><input type="text" id="password" disabled></div>
+          </div>
+        </fieldset>
+      </section>
+    </main>
+
         <div class="form-grid">
           <div class="form-section"><label>Mitgliedsnummer</label><input type="text" id="mitgliedsnummer" disabled></div>
           <div class="form-section"><label>Anrede</label><input type="text" id="anrede" disabled></div>
@@ -116,19 +163,19 @@
     <section id="courseSection" class="course-section card">
       <h2>Kursübersicht (nur Anzeige)</h2>
       <div class="section-header" id="generalModulesHeader">Allgemein</div>
-      <div class="course-list" id="generalModules"></div>
+      <ul class="course-list" id="generalModules"></ul>
       <div class="section-header" id="branddienstModulesHeader">Branddienst / Atemschutz</div>
-      <div class="course-list" id="branddienstModules"></div>
+      <ul class="course-list" id="branddienstModules"></ul>
       <div class="section-header" id="techModulesHeader">Technisch</div>
-      <div class="course-list" id="techModules"></div>
+      <ul class="course-list" id="techModules"></ul>
       <div class="section-header" id="hazardModulesHeader">Schadstoff</div>
-      <div class="course-list" id="hazardModules"></div>
+      <ul class="course-list" id="hazardModules"></ul>
       <div class="section-header" id="waterModulesHeader">Wasserdienst</div>
-      <div class="course-list" id="waterModules"></div>
+      <ul class="course-list" id="waterModules"></ul>
       <div class="section-header" id="emModulesHeader">Einsatzmaschinist</div>
-      <div class="course-list" id="emModules"></div>
+      <ul class="course-list" id="emModules"></ul>
       <div class="section-header" id="officerModulesHeader">Führung / Chargen</div>
-      <div class="course-list" id="officerModules"></div>
+      <ul class="course-list" id="officerModules"></ul>
     </section>
   </div>
 

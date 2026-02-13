@@ -122,6 +122,15 @@ function fillTrainersDatalist(ausbildner) {
   });
 }
 
+function getRecordValue(record, keys) {
+  for (const key of keys) {
+    if (record[key] !== undefined && record[key] !== null && String(record[key]).trim() !== '') {
+      return record[key];
+    }
+  }
+  return '';
+}
+
 /********************* Suche & Vorschläge *******************/
 function searchSuggestions() {
   const query = $('#searchField').val().toLowerCase();
@@ -158,6 +167,33 @@ function displaySuggestions(records) {
 
 /**************** Formular füllen & Editing ****************/
 function fillForm(record) {
+  $('#anrede').val(getRecordValue(record, ['anrede', 'Anrede']));
+  $('#titel').val(getRecordValue(record, ['titel', 'Titel']));
+  $('#vorname').val(getRecordValue(record, ['vorname', 'Namen', 'Vorname']));
+  $('#nachname').val(getRecordValue(record, ['nachname', 'Nachnamen', 'Nachname']));
+  $('#geburtsdatum').val(getRecordValue(record, ['geburtsdatum', 'Geburtsdatum']));
+  $('#beruf').val(getRecordValue(record, ['beruf', 'Beruf']));
+  $('#geburtsort').val(getRecordValue(record, ['geburtsort', 'Geburtsort']));
+  $('#familienstand').val(getRecordValue(record, ['familienstand', 'Familienstand']));
+  $('#staatsbuergerschaft').val(getRecordValue(record, ['staatsburgerschaft', 'staatsbuergerschaft', 'Staatsbürgerschaft']));
+
+  $('#identifikationsnummer').val(getRecordValue(record, ['identifikationsnummer', 'Identifikationsnummer']));
+  $('#telefonnummer').val(getRecordValue(record, ['telefonnummer', 'Telefonnummer']));
+  $('#forumsname').val(getRecordValue(record, ['forumsname', 'Forumsname']));
+  $('#discord_id').val(getRecordValue(record, ['discord_id', 'Discord ID', 'DiscordID']));
+  $('#dmail').val(getRecordValue(record, ['dmail', 'D-Mail Adresse', 'email', 'E-Mail']));
+
+  $('#adresse').val(getRecordValue(record, ['adresse', 'Adresse']));
+  $('#postleitzahl').val(getRecordValue(record, ['postleitzahl', 'Postleitzahl', 'plz']));
+  $('#stadt').val(getRecordValue(record, ['stadt', 'Stadt']));
+  $('#personalbild_url').val(getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']));
+
+  $('#login_mail').val(getRecordValue(record, ['login_mail', 'Login Mail']));
+  $('#password').val(getRecordValue(record, ['password', 'Password']));
+
+  const personalbildUrl = getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']);
+  if (personalbildUrl) {
+    $('#personalImage').html(`<img src="${personalbildUrl}" alt="Personalbild">`);
   $('#mitgliedsnummer').val(record['Mitgliedsnummer'] || '');
   $('#anrede').val(record['Anrede'] || '');
   $('#titel').val(record['Titel'] || '');
@@ -186,28 +222,17 @@ function fillForm(record) {
     $('#personalImage').text('Foto');
   }
 
-  const dg = record['Aktueller Dienstgrad'];
+  const dg = getRecordValue(record, ['Aktueller Dienstgrad']);
   if (dg && dienstgradBilder[dg]) {
     $('#dienstgradImage').html(`<img src="${dienstgradBilder[dg]}" alt="${dg}">`);
   } else {
     $('#dienstgradImage').text('Dienstgrad');
   }
 
-  const isAusbildner = (record['Ausbildner?'] || '').toLowerCase() === 'ja';
-  $('#ausbildnerCheckbox').prop('checked', isAusbildner);
-  if (isAusbildner) {
-    $('#ausbildnerFuerSection').show();
-    $('#ausbildner_fuer').val(record['Ausbildner für'] || '');
-  } else {
-    $('#ausbildnerFuerSection').hide();
-    $('#ausbildner_fuer').val('');
-  }
-
   setActiveStatus((record['Aktives Mitglied?'] || '').toLowerCase() === 'ja');
   updateHeaderTitle(record);
 
   $('.content input, .content select').prop('disabled', true);
-  $('#ausbildnerEditContainer').hide();
 }
 
 function setActiveStatus(isActive) {
@@ -222,7 +247,9 @@ function toggleActiveStatus() {
 }
 
 function updateHeaderTitle(record) {
-  const title = `${record['Mitgliedsnummer'] || ''} - ${record['Aktueller Dienstgrad'] || ''} ${record['Namen'] || ''} ${record['Nachnamen'] || ''}`;
+  const vorname = getRecordValue(record, ['vorname', 'Namen', 'Vorname']);
+  const nachname = getRecordValue(record, ['nachname', 'Nachnamen', 'Nachname']);
+  const title = `${record['Mitgliedsnummer'] || ''} - ${record['Aktueller Dienstgrad'] || ''} ${vorname} ${nachname}`;
   $('#headerTitle').text(`[${title.trim()}]`);
 }
 
@@ -282,16 +309,16 @@ function makeCourseCard(courseName, record) {
   const completed = cfg.hasCompleted ? ((record[`${courseName} - Absolviert`] || '').toLowerCase() === 'ja') : false;
   const withdrawn = cfg.hasWithdrawn ? (record[`${courseName} - Zurückgezogen`] || '') : '';
 
-  const card = $('<div class="course-card"></div>');
+  const card = $('<li class="course-card"></li>');
   card.append(`<h4>${courseName}</h4>`);
 
-  const meta = $('<dl class="course-meta"></dl>');
-  if (date) meta.append('<dt>Datum</dt><dd>' + date + '</dd>');
-  if (validUntil) meta.append('<dt>Gültig bis</dt><dd>' + validUntil + '</dd>');
-  if (trainer) meta.append('<dt>Ausbildner</dt><dd>' + trainer + '</dd>');
-  if (info) meta.append('<dt>Information</dt><dd>' + info + '</dd>');
-  if (withdrawn) meta.append('<dt>Zurückgezogen</dt><dd>' + withdrawn + '</dd>');
-  card.append(meta);
+  const details = [];
+  if (date) details.push(`Datum: ${date}`);
+  if (validUntil) details.push(`Gültig bis: ${validUntil}`);
+  if (trainer) details.push(`Ausbildner: ${trainer}`);
+  if (info) details.push(`Info: ${info}`);
+  if (withdrawn) details.push(`Zurückgezogen: ${withdrawn}`);
+  if (details.length) card.append(`<p class="course-meta">${details.join(' • ')}</p>`);
 
   if (completed) card.append('<span class="course-chip">Absolviert</span>');
   if (withdrawn) card.addClass('withdrawn');
@@ -332,66 +359,31 @@ function activateStammdatenEditingMode() {
   if (!isEditing) {
     fields.forEach(f => { f.disabled = false; });
 
-    $('#ausbildnerEditContainer').show();
-    $('#ausbildnerCheckbox').prop('disabled', false);
-    if ($('#ausbildnerCheckbox').is(':checked')) {
-      $('#ausbildnerFuerSection').show();
-      $('#ausbildner_fuer').prop('disabled', false);
-    } else {
-      $('#ausbildnerFuerSection').hide();
-      $('#ausbildner_fuer').prop('disabled', true);
-    }
-
-    $('#ausbildnerCheckbox').off('change.__ausb').on('change.__ausb', function () {
-      if (this.checked) {
-        $('#ausbildnerFuerSection').show();
-        $('#ausbildner_fuer').prop('disabled', false);
-      } else {
-        $('#ausbildnerFuerSection').hide();
-        $('#ausbildner_fuer').prop('disabled', true).val('');
-      }
-    });
-
     $('#statusToggle')
       .prop('disabled', false)
       .css('cursor', 'pointer')
       .off('click.__status')
       .on('click.__status', toggleActiveStatus);
 
-    $('#dienstgrad, #namen, #nachnamen, #mitgliedsnummer')
-      .off('input.__live change.__live')
-      .on('input.__live change.__live', function () {
+    $('#vorname, #nachname')
+      .off('input.__live')
+      .on('input.__live', function () {
         const tempRecord = Object.assign({}, selectedRecord);
-        tempRecord['Mitgliedsnummer'] = $('#mitgliedsnummer').val();
-        tempRecord['Aktueller Dienstgrad'] = $('#dienstgrad').val();
-        tempRecord['Namen'] = $('#namen').val();
-        tempRecord['Nachnamen'] = $('#nachnamen').val();
-
+        tempRecord['Namen'] = $('#vorname').val();
+        tempRecord['Nachnamen'] = $('#nachname').val();
         updateHeaderTitle(tempRecord);
-
-        const dg = tempRecord['Aktueller Dienstgrad'];
-        if (dg && dienstgradBilder[dg]) {
-          $('#dienstgradImage').html(`<img src="${dienstgradBilder[dg]}" alt="${dg}">`);
-        } else {
-          $('#dienstgradImage').text('Dienstgrad');
-        }
       });
 
     document.getElementById('editStammdatenButton').textContent = 'Stammdaten speichern';
   } else {
     fields.forEach(f => { f.disabled = true; });
 
-    $('#ausbildnerCheckbox').prop('disabled', true);
-    $('#ausbildnerEditContainer').hide();
-    $('#ausbildner_fuer').prop('disabled', true);
-
     $('#statusToggle')
       .prop('disabled', true)
       .css('cursor', 'default')
       .off('click.__status');
 
-    $('#dienstgrad, #namen, #nachnamen, #mitgliedsnummer').off('input.__live change.__live');
-    $('#ausbildnerCheckbox').off('change.__ausb');
+    $('#vorname, #nachname').off('input.__live');
 
     document.getElementById('editStammdatenButton').textContent = 'Stammdaten bearbeiten';
     saveStammdaten();
@@ -401,30 +393,30 @@ function activateStammdatenEditingMode() {
 function saveStammdaten() {
   if (!selectedRecord) return;
 
-  selectedRecord['Mitgliedsnummer'] = $('#mitgliedsnummer').val() || '';
-  selectedRecord['Anrede'] = $('#anrede').val() || '';
-  selectedRecord['Titel'] = $('#titel').val() || '';
-  selectedRecord['Namen'] = $('#namen').val() || '';
-  selectedRecord['Nachnamen'] = $('#nachnamen').val() || '';
-  selectedRecord['Geburtsdatum'] = $('#geburtsdatum').val() || '';
-  selectedRecord['Beruf'] = $('#beruf').val() || '';
-  selectedRecord['Geburtsort'] = $('#geburtsort').val() || '';
-  selectedRecord['Familienstand'] = $('#familienstand').val() || '';
-  selectedRecord['Staatsbürgerschaft'] = $('#staatsbuergerschaft').val() || '';
-  selectedRecord['Identifikationsnummer'] = $('#identifikationsnummer').val() || '';
-  selectedRecord['Telefonnummer'] = $('#telefonnummer').val() || '';
-  selectedRecord['Forumsname'] = $('#forumsname').val() || '';
-  selectedRecord['Adresse'] = $('#adresse').val() || '';
-  selectedRecord['Postleitzahl'] = $('#plz').val() || '';
-  selectedRecord['Stadt'] = $('#stadt').val() || '';
-  selectedRecord['D-Mail Adresse'] = $('#email').val() || '';
-  selectedRecord['Abgemeldet Grund'] = $('#abgemeldet_grund').val() || '';
-  selectedRecord['Aktueller Dienstgrad'] = $('#dienstgrad').val() || '';
-  selectedRecord['Letzte Beförderung'] = $('#beforderung').val() || '';
-  selectedRecord['Funktion'] = $('#funktion').val() || '';
+  selectedRecord['anrede'] = $('#anrede').val() || '';
+  selectedRecord['titel'] = $('#titel').val() || '';
+  selectedRecord['vorname'] = $('#vorname').val() || '';
+  selectedRecord['nachname'] = $('#nachname').val() || '';
+  selectedRecord['geburtsdatum'] = $('#geburtsdatum').val() || '';
+  selectedRecord['beruf'] = $('#beruf').val() || '';
+  selectedRecord['geburtsort'] = $('#geburtsort').val() || '';
+  selectedRecord['familienstand'] = $('#familienstand').val() || '';
+  selectedRecord['staatsburgerschaft'] = $('#staatsbuergerschaft').val() || '';
 
-  selectedRecord['Ausbildner?'] = $('#ausbildnerCheckbox').is(':checked') ? 'Ja' : 'Nein';
-  selectedRecord['Ausbildner für'] = $('#ausbildnerCheckbox').is(':checked') ? ($('#ausbildner_fuer').val() || '') : '';
+  selectedRecord['identifikationsnummer'] = $('#identifikationsnummer').val() || '';
+  selectedRecord['telefonnummer'] = $('#telefonnummer').val() || '';
+  selectedRecord['forumsname'] = $('#forumsname').val() || '';
+  selectedRecord['discord_id'] = $('#discord_id').val() || '';
+  selectedRecord['dmail'] = $('#dmail').val() || '';
+
+  selectedRecord['adresse'] = $('#adresse').val() || '';
+  selectedRecord['postleitzahl'] = $('#postleitzahl').val() || '';
+  selectedRecord['stadt'] = $('#stadt').val() || '';
+  selectedRecord['personalbild_url'] = $('#personalbild_url').val() || '';
+
+  selectedRecord['login_mail'] = $('#login_mail').val() || '';
+  selectedRecord['password'] = $('#password').val() || '';
+
   selectedRecord['Aktives Mitglied?'] = $('#statusToggle').hasClass('active') ? 'Ja' : 'Nein';
 
   const index = allRecords.findIndex(r => r['Mitgliedsnummer'] === selectedRecord['Mitgliedsnummer']);
