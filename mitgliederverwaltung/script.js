@@ -194,6 +194,30 @@ function fillForm(record) {
   const personalbildUrl = getRecordValue(record, ['personalbild_url', 'Personalbild URL', 'Personalbild']);
   if (personalbildUrl) {
     $('#personalImage').html(`<img src="${personalbildUrl}" alt="Personalbild">`);
+  $('#mitgliedsnummer').val(record['Mitgliedsnummer'] || '');
+  $('#anrede').val(record['Anrede'] || '');
+  $('#titel').val(record['Titel'] || '');
+  $('#namen').val(record['Namen'] || '');
+  $('#nachnamen').val(record['Nachnamen'] || '');
+  $('#geburtsdatum').val(record['Geburtsdatum'] || '');
+  $('#beruf').val(record['Beruf'] || '');
+  $('#geburtsort').val(record['Geburtsort'] || '');
+  $('#familienstand').val(record['Familienstand'] || '');
+  $('#staatsbuergerschaft').val(record['Staatsbürgerschaft'] || '');
+  $('#identifikationsnummer').val(record['Identifikationsnummer'] || '');
+  $('#telefonnummer').val(record['Telefonnummer'] || '');
+  $('#forumsname').val(record['Forumsname'] || '');
+  $('#adresse').val(record['Adresse'] || '');
+  $('#plz').val(record['Postleitzahl'] || '');
+  $('#stadt').val(record['Stadt'] || '');
+  $('#email').val(record['D-Mail Adresse'] || '');
+  $('#abgemeldet_grund').val(record['Abgemeldet Grund'] || '');
+  $('#dienstgrad').val(record['Aktueller Dienstgrad'] || '');
+  $('#beforderung').val(record['Letzte Beförderung'] || '');
+  $('#funktion').val(record['Funktion'] || '');
+
+  if (record['Personalbild']) {
+    $('#personalImage').html(`<img src="${record['Personalbild']}" alt="Personalbild">`);
   } else {
     $('#personalImage').text('Foto');
   }
