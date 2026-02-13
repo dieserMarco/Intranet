@@ -29,7 +29,7 @@ $(document).ready(function () {
     }
   });
 
-  $('.datepicker').datepicker({ dateFormat: 'yy-mm-dd' });
+  $('.datepicker').datepicker({ dateFormat: 'dd.mm.yy' });
 });
 
 async function loadMembers() {
@@ -56,6 +56,40 @@ function toBool(value) {
 
 function boolTo01(value) {
   return toBool(value) ? 1 : 0;
+}
+
+
+function formatDateForDisplay(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  const matchIso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (matchIso) {
+    return `${matchIso[3]}.${matchIso[2]}.${matchIso[1]}`;
+  }
+
+  const matchDisplay = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (matchDisplay) return raw;
+
+  return raw;
+}
+
+function toApiDate(value) {
+  const raw = String(value || '').trim();
+  const matchDisplay = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (matchDisplay) {
+    return `${matchDisplay[3]}-${matchDisplay[2]}-${matchDisplay[1]}`;
+  }
+  return raw;
+}
+
+function showSaveOverlay(message) {
+  $('#saveOverlayMessage').text(message);
+  $('#saveOverlay').addClass('visible').attr('aria-hidden', 'false');
+}
+
+function closeSaveOverlay() {
+  $('#saveOverlay').removeClass('visible').attr('aria-hidden', 'true');
 }
 
 function searchSuggestions() {
@@ -90,7 +124,7 @@ function fillForm(record) {
   $('#member_no').val(record.member_no || '');
   $('#vorname').val(record.vorname || '');
   $('#nachname').val(record.nachname || '');
-  $('#geburtsdatum').val(record.geburtsdatum || '');
+  $('#geburtsdatum').val(formatDateForDisplay(record.geburtsdatum));
   $('#identifikationsnummer').val(record.identifikationsnummer || '');
 
   $('#telefonnummer').val(record.telefonnummer || '');
@@ -108,8 +142,9 @@ function fillForm(record) {
   $('#dienstzuteilung').val(record.dienstzuteilung || '');
   $('#is_instructor').val(boolTo01(record.is_instructor));
   $('#has_special_unit').val(boolTo01(record.has_special_unit));
-  $('#created_at').val(record.created_at || '');
-  $('#updated_at').val(record.updated_at || '');
+  $('#created_at').val(formatDateForDisplay(record.created_at));
+  $('#updated_at').val(formatDateForDisplay(record.updated_at));
+  $('#updated_by').val(record.updated_by || 'Kommt mit Login-System');
 
   const dg = record.aktueller_dienstgrad;
   if (dg && dienstgradBilder[dg]) {
@@ -127,7 +162,7 @@ function fillForm(record) {
 function setEditMode(enabled) {
   editingMode = enabled;
   $('.content input, .content select').prop('disabled', !enabled);
-  $('#created_at, #updated_at, #password_display').prop('disabled', true);
+  $('#created_at, #updated_at, #updated_by, #password_display').prop('disabled', true);
 
   $('#statusToggle')
     .prop('disabled', !enabled)
@@ -172,7 +207,7 @@ async function activateStammdatenEditingMode() {
     member_no: $('#member_no').val().trim(),
     vorname: $('#vorname').val().trim(),
     nachname: $('#nachname').val().trim(),
-    geburtsdatum: $('#geburtsdatum').val().trim(),
+    geburtsdatum: toApiDate($('#geburtsdatum').val().trim()),
     identifikationsnummer: $('#identifikationsnummer').val().trim(),
     forumsname: $('#forumsname').val().trim(),
     telefonnummer: $('#telefonnummer').val().trim(),
@@ -204,10 +239,10 @@ async function activateStammdatenEditingMode() {
     const refreshed = allRecords.find((item) => Number(item.id) === Number(selectedRecord.id));
     selectedRecord = refreshed || payload;
     fillForm(selectedRecord);
-    alert('Mitglied erfolgreich gespeichert.');
+    showSaveOverlay('Mitglied erfolgreich gespeichert.');
   } catch (error) {
     console.error(error);
-    alert(`Fehler beim Speichern: ${error.message}`);
+    showSaveOverlay(`Fehler beim Speichern: ${error.message}`);
   }
 }
 

@@ -94,6 +94,7 @@
             </div>
             <div class="form-section"><label>Eintritt (created_at)</label><input type="text" id="created_at" disabled></div>
             <div class="form-section"><label>Zuletzt geändert (updated_at)</label><input type="text" id="updated_at" disabled></div>
+            <div class="form-section"><label>Zuletzt bearbeitet von</label><input type="text" id="updated_by" value="Kommt mit Login-System" disabled></div>
             <div class="form-section"><label>Password</label><input type="password" id="password_display" value="********" disabled></div>
           </div>
         </fieldset>
@@ -104,6 +105,14 @@
       <h2>Kursübersicht (nur Anzeige)</h2>
       <p class="subtitle">Kursdaten sind in dieser DB-Anbindung aktuell nicht hinterlegt.</p>
     </section>
+  </div>
+
+  <div id="saveOverlay" class="save-overlay" aria-hidden="true">
+    <div class="save-modal">
+      <h3>Gespeichert</h3>
+      <p id="saveOverlayMessage">Änderungen wurden gespeichert.</p>
+      <button type="button" class="primary" onclick="closeSaveOverlay()">OK</button>
+    </div>
   </div>
 
   <script src="script.js" defer></script>

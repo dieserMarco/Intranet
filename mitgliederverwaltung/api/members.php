@@ -12,8 +12,8 @@ try {
             forumsname, telefonnummer, discord_id, dmail, adresse, postleitzahl, stadt,
             login_mail, aktueller_dienstgrad, funktion, dienstzuteilung,
             aktives_mitglied, is_instructor, has_special_unit,
-            DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") AS created_at,
-            DATE_FORMAT(updated_at, "%Y-%m-%d %H:%i:%s") AS updated_at
+            DATE_FORMAT(created_at, "%d.%m.%Y") AS created_at,
+            DATE_FORMAT(updated_at, "%d.%m.%Y") AS updated_at
             FROM members
             ORDER BY member_no ASC');
 
