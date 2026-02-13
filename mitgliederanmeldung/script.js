@@ -1,30 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  runTransaction,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  deleteUser
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAEKPiUzXc_tFvmiop4hDEdhv8Rkg2kWjU",
-  authDomain: "intranet-ffwn.firebaseapp.com",
-  projectId: "intranet-ffwn",
-  storageBucket: "intranet-ffwn.firebasestorage.app",
-  messagingSenderId: "221055908808",
-  appId: "1:221055908808:web:b1c63120bc73aa26a6defd"
-};
-
 const ORG_ID = "ffwn";
-const MEMBER_PREFIX = "21401";
+const API_BASE = "api";
 
 // Apps Script Web App URL (für Discord Notify)
 const APPS_SCRIPT_URL =
@@ -133,10 +108,6 @@ const STEPS = [
   { key: "summary", title: "Zusammenfassung", fields: [] }
 ];
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
 const el = (id) => document.getElementById(id);
 
 function setMsg(kind, text) {
@@ -223,16 +194,23 @@ function loadStep(){
 }
 function saveStep(){ localStorage.setItem(STORAGE_KEY + "_step", String(currentStep)); }
 
-async function allocateMemberNumber(){
-  const counterRef = doc(db, "orgs", ORG_ID, "counters", "members");
-  const num = await runTransaction(db, async (tx) => {
-    const snap = await tx.get(counterRef);
-    let next = 1;
-    if (snap.exists()) next = Number(snap.data().next || 1);
-    tx.set(counterRef, { next: next + 1 }, { merge: true });
-    return next;
+async function apiFetch(path, options = {}){
+  const res = await fetch(`${API_BASE}/${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
   });
-  return `${MEMBER_PREFIX}-${String(num).padStart(3, "0")}`;
+
+  let data = null;
+  try { data = await res.json(); } catch { data = null; }
+
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || `Serverfehler (${res.status})`);
+  }
+
+  return data;
 }
 
 function updateLoginMail(){
@@ -259,37 +237,11 @@ function updateLoginMail(){
 
 /** ✅ Token check (existiert/active/unused) */
 async function checkInviteTokenOrThrow(token){
-  const tokenRef = doc(db, "orgs", ORG_ID, "tokens", token);
-  const snap = await getDoc(tokenRef);
-
-  if (!snap.exists()) throw new Error("❌ Token existiert nicht.");
-  const data = snap.data();
-
-  if (!data.active) throw new Error("❌ Token ist deaktiviert.");
-  if (data.used) throw new Error("❌ Token wurde bereits eingelöst.");
-
-  return true;
-}
-
-/** ✅ Token final einlösen (transaction-safe) */
-async function redeemInviteTokenOrThrow(token, usedBy){
-  const tokenRef = doc(db, "orgs", ORG_ID, "tokens", token);
-
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(tokenRef);
-
-    if (!snap.exists()) throw new Error("❌ Token existiert nicht.");
-    const data = snap.data();
-
-    if (!data.active) throw new Error("❌ Token ist deaktiviert.");
-    if (data.used) throw new Error("❌ Token wurde bereits eingelöst.");
-
-    tx.update(tokenRef, {
-      used: true,
-      usedAt: serverTimestamp(),
-      usedBy: usedBy ?? null
-    });
+  const data = await apiFetch("token-check.php", {
+    method: "POST",
+    body: JSON.stringify({ token, orgId: ORG_ID })
   });
+  return data.valid === true;
 }
 
 function renderSummary(host){
@@ -606,29 +558,14 @@ async function validateStep(){
   return true;
 }
 
-async function createMemberDoc(memberNumber, authUid){
-  const vorname = (state.vorname ?? "").toString().trim();
-  const nachname = (state.nachname ?? "").toString().trim();
-  const docId = sanitizeDocId(`${memberNumber}_${vorname}_${nachname}`);
-  const memberRef = doc(db, "orgs", ORG_ID, "members", docId);
-
-  const einsendeDatum = todayAT();
-
-  await setDoc(memberRef, {
+async function createMemberDoc(){
+  const payload = {
     orgId: ORG_ID,
-    mitgliedsnummer: memberNumber,
-
-    // ✅ Auth-Verknüpfung
-    auth_uid: authUid,
-    login_mail: state.login_mail ?? null,
-
-    // optional: Token im Member speichern (hilfreich fürs Tracking)
-    invite_token: state.invite_token ?? null,
-
+    invite_token: (state.invite_token ?? "").toString().trim(),
     anrede: state.anrede ?? null,
     titel: state.titel ?? null,
-    vorname,
-    nachname,
+    vorname: (state.vorname ?? "").toString().trim(),
+    nachname: (state.nachname ?? "").toString().trim(),
     geburtsdatum: state.geburtsdatum ?? null,
     beruf: state.beruf ?? null,
     geburtsort: state.geburtsort ?? null,
@@ -643,28 +580,20 @@ async function createMemberDoc(memberNumber, authUid){
     stadt: state.stadt ?? null,
     dmail: state.dmail ?? null,
     personalbild_url: state.personalbild_url ?? null,
+    login_mail: state.login_mail ?? null,
+    password: state.password ?? "",
+    defaults: DEFAULTS
+  };
 
-    // Fixwerte (nur speichern)
-    mitglied_seit: einsendeDatum,
-    aktueller_dienstgrad: DEFAULTS.aktueller_dienstgrad,
-    letzte_beforderung: einsendeDatum,
-    funktion: DEFAULTS.funktion,
-    ausbildner: DEFAULTS.ausbildner,
-    ausbildner_fur: DEFAULTS.ausbildner_fur,
-    dienstzuteilung: DEFAULTS.dienstzuteilung,
-    aktives_mitglied: DEFAULTS.aktives_mitglied,
-
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+  const data = await apiFetch("register-member.php", {
+    method: "POST",
+    body: JSON.stringify(payload)
   });
 
-  const coursesMetaRef = doc(db, "orgs", ORG_ID, "members", docId, "courses", "_meta");
-  await setDoc(coursesMetaRef, {
-    createdAt: serverTimestamp(),
-    note: "Auto-created courses container"
-  });
-
-  return docId;
+  return {
+    memberNumber: data.memberNumber,
+    memberId: data.memberId
+  };
 }
 
 function initTheme(){
@@ -733,26 +662,11 @@ el("memberForm")?.addEventListener("submit", async (e) => {
   const old = btn?.innerHTML;
   if (btn){ btn.disabled = true; btn.textContent = "Wird gesendet…"; }
 
-  let createdAuthUser = null;
-
   try{
-    // ✅ Nochmal Token check (falls er in der Zwischenzeit eingelöst wurde)
+    // ✅ Vorab-Check Token
     await checkInviteTokenOrThrow(inviteToken);
 
-    // 1) Auth-User erstellen
-    const email = (state.login_mail ?? "").toString().trim();
-    const password = (state.password ?? "").toString();
-
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    createdAuthUser = cred.user; // für rollback
-    const uid = cred.user.uid;
-
-    // 2) Member Nummer + Doc erstellen (UID speichern)
-    const memberNumber = await allocateMemberNumber();
-    const docId = await createMemberDoc(memberNumber, uid);
-
-    // 3) ✅ Token final einlösen (transaction-safe)
-    await redeemInviteTokenOrThrow(inviteToken, email);
+    const { memberNumber, memberId } = await createMemberDoc();
 
     // 🔔 Discord Notify via Apps Script (ASYNC – blockiert NICHT)
     fetch(APPS_SCRIPT_URL, {
@@ -761,8 +675,7 @@ el("memberForm")?.addEventListener("submit", async (e) => {
       body: JSON.stringify({
         event: "member_created",
         memberNumber,
-        uid,
-        docId,
+        memberId,
 
         // Person
         anrede: state.anrede ?? null,
@@ -812,21 +725,7 @@ el("memberForm")?.addEventListener("submit", async (e) => {
   }catch(err){
     console.error(err);
 
-    // Rollback: wenn Auth angelegt, aber danach was schief ging -> User wieder löschen
-    try{
-      if (createdAuthUser && auth.currentUser) {
-        await deleteUser(auth.currentUser);
-      }
-    }catch(e){
-      console.warn("Rollback deleteUser fehlgeschlagen:", e);
-    }
-
-    const msg =
-      err?.code === "auth/email-already-in-use" ? "❌ Diese Login-E-Mail existiert bereits."
-    : err?.code === "auth/invalid-email" ? "❌ Ungültige E-Mail."
-    : err?.code === "auth/weak-password" ? "❌ Passwort zu schwach (Firebase)."
-    : err?.message ? err.message
-    : "❌ Fehler: " + String(err);
+    const msg = err?.message ? err.message : "❌ Fehler: " + String(err);
 
     setMsg("err", msg);
 
