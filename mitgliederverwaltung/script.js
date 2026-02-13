@@ -160,6 +160,9 @@ function displaySuggestions(records) {
     item.on('click', () => {
       selectedRecord = Object.assign({}, r);
       selectedRecordIndex = allRecords.indexOf(r);
+      if (selectedRecordIndex === -1) {
+        selectedRecordIndex = allRecords.findIndex(x => x['Mitgliedsnummer'] === r['Mitgliedsnummer']);
+      }
       fillForm(selectedRecord);
       suggestionsBox.empty();
       displayCourses(selectedRecord);
@@ -400,6 +403,12 @@ function saveStammdaten() {
 
   if (selectedRecordIndex >= 0 && selectedRecordIndex < allRecords.length) {
     allRecords[selectedRecordIndex] = selectedRecord;
+  } else {
+    const fallbackIndex = allRecords.findIndex(r => r['Mitgliedsnummer'] === selectedRecord['Mitgliedsnummer']);
+    if (fallbackIndex !== -1) {
+      allRecords[fallbackIndex] = selectedRecord;
+      selectedRecordIndex = fallbackIndex;
+    }
   }
 
   uploadCSVToGoogle();
