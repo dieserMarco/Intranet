@@ -285,3 +285,63 @@ button:disabled {
   .group-grid { grid-template-columns: 1fr; }
   .field-span-2 { grid-column: span 1; }
 }
+
+.token-shell {
+  max-width: 900px;
+}
+
+.token-card {
+  padding: 22px;
+}
+
+.token-grid {
+  grid-template-columns: minmax(220px, 320px);
+}
+
+.token-actions {
+  margin-top: 12px;
+}
+
+.token-actions button {
+  width: 100%;
+}
+
+.token-output-group {
+  margin-top: 14px;
+}
+
+.token-result-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+#tokenOutput {
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.status-message {
+  min-height: 24px;
+  margin: 10px 2px 0;
+  color: var(--muted);
+}
+
+.status-message.success {
+  color: rgba(34, 197, 94, 0.95);
+}
+
+.status-message.error {
+  color: rgba(255, 110, 110, 0.95);
+}
+
+@media (max-width: 640px) {
+  .token-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .token-result-row {
+    grid-template-columns: 1fr;
+  }
+}
