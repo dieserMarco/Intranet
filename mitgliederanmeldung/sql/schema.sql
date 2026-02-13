@@ -2,18 +2,13 @@ CREATE TABLE IF NOT EXISTS invite_tokens (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   org_id VARCHAR(64) NOT NULL,
   token VARCHAR(128) NOT NULL,
-  token_type VARCHAR(20) NOT NULL DEFAULT 'normal',
   active TINYINT(1) NOT NULL DEFAULT 1,
   used TINYINT(1) NOT NULL DEFAULT 0,
-  expires_at DATETIME NULL,
   used_at DATETIME NULL,
   used_by VARCHAR(255) NULL,
-  created_by VARCHAR(100) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_org_token (org_id, token),
-  KEY idx_org_active_used (org_id, active, used),
-  KEY idx_expires_at (expires_at)
+  UNIQUE KEY uq_org_token (org_id, token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS member_counters (

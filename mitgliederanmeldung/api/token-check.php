@@ -15,8 +15,12 @@ if ($token === '' || $orgId === '') {
     json_response(['ok' => false, 'error' => 'Token oder Organisation fehlt.'], 400);
 }
 
+if (is_dev_token($token)) {
+    json_response(['ok' => true, 'valid' => true, 'devToken' => true]);
+}
+
 $pdo = db();
-$stmt = $pdo->prepare('SELECT active, used, expires_at FROM invite_tokens WHERE org_id = :org_id AND token = :token LIMIT 1');
+$stmt = $pdo->prepare('SELECT active, used FROM invite_tokens WHERE org_id = :org_id AND token = :token LIMIT 1');
 $stmt->execute([
     ':org_id' => $orgId,
     ':token' => $token,
@@ -32,8 +36,5 @@ if ((int)$row['active'] !== 1) {
 if ((int)$row['used'] === 1) {
     json_response(['ok' => false, 'error' => '❌ Token wurde bereits eingelöst.'], 409);
 }
-if (!empty($row['expires_at']) && strtotime((string)$row['expires_at']) < time()) {
-    json_response(['ok' => false, 'error' => '❌ Token ist abgelaufen.'], 409);
-}
 
-json_response(['ok' => true, 'valid' => true]);
+json_response(['ok' => true, 'valid' => true, 'devToken' => false]);

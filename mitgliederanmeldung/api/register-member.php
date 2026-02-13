@@ -31,32 +31,32 @@ if (strlen($password) < 8) {
     json_response(['ok' => false, 'error' => '❌ Passwort muss mindestens 8 Zeichen haben.'], 400);
 }
 
+$loginMailNormalized = mb_strtolower($loginMail);
+$devTokenUsed = is_dev_token($token);
 $pdo = db();
 
 try {
     $pdo->beginTransaction();
 
-    $tokenStmt = $pdo->prepare('SELECT id, active, used, expires_at FROM invite_tokens WHERE org_id = :org_id AND token = :token FOR UPDATE');
-    $tokenStmt->execute([
-        ':org_id' => $orgId,
-        ':token' => $token,
-    ]);
-    $tokenRow = $tokenStmt->fetch();
+    $tokenRow = null;
+    if (!$devTokenUsed) {
+        $tokenStmt = $pdo->prepare('SELECT id, active, used FROM invite_tokens WHERE org_id = :org_id AND token = :token FOR UPDATE');
+        $tokenStmt->execute([
+            ':org_id' => $orgId,
+            ':token' => $token,
+        ]);
+        $tokenRow = $tokenStmt->fetch();
 
-    if (!$tokenRow) {
-        throw new RuntimeException('❌ Token existiert nicht.');
+        if (!$tokenRow) {
+            throw new RuntimeException('❌ Token existiert nicht.');
+        }
+        if ((int)$tokenRow['active'] !== 1) {
+            throw new RuntimeException('❌ Token ist deaktiviert.');
+        }
+        if ((int)$tokenRow['used'] === 1) {
+            throw new RuntimeException('❌ Token wurde bereits eingelöst.');
+        }
     }
-    if ((int)$tokenRow['active'] !== 1) {
-        throw new RuntimeException('❌ Token ist deaktiviert.');
-    }
-    if ((int)$tokenRow['used'] === 1) {
-        throw new RuntimeException('❌ Token wurde bereits eingelöst.');
-    }
-    if (!empty($tokenRow['expires_at']) && strtotime((string)$tokenRow['expires_at']) < time()) {
-        throw new RuntimeException('❌ Token ist abgelaufen.');
-    }
-
-    $loginMailNormalized = mb_strtolower($loginMail);
 
     $mailStmt = $pdo->prepare('SELECT id FROM members WHERE org_id = :org_id AND login_mail = :login_mail LIMIT 1');
     $mailStmt->execute([
@@ -137,11 +137,13 @@ try {
 
     $memberId = (int)$pdo->lastInsertId();
 
-    $redeemStmt = $pdo->prepare('UPDATE invite_tokens SET used = 1, used_at = NOW(), used_by = :used_by WHERE id = :id');
-    $redeemStmt->execute([
-        ':used_by' => $loginMailNormalized,
-        ':id' => $tokenRow['id'],
-    ]);
+    if (!$devTokenUsed && is_array($tokenRow)) {
+        $redeemStmt = $pdo->prepare('UPDATE invite_tokens SET used = 1, used_at = NOW(), used_by = :used_by WHERE id = :id');
+        $redeemStmt->execute([
+            ':used_by' => $loginMailNormalized,
+            ':id' => $tokenRow['id'],
+        ]);
+    }
 
     $pdo->commit();
 
@@ -149,6 +151,7 @@ try {
         'ok' => true,
         'memberNumber' => $memberNumber,
         'memberId' => $memberId,
+        'devTokenUsed' => $devTokenUsed,
     ]);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) {
