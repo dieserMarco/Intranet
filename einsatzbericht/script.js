@@ -376,6 +376,8 @@ let teamData = [];
 let globalAssigned = [];
 var savedAssignments = {};
 let currentSeatBox = null;
+let vehiclesLoaded = false;
+let teamLoaded = false;
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
@@ -384,22 +386,46 @@ let showAvailableVehiclesOnly = false;
 let assignmentSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".step").forEach((stepEl, index) => {
+    stepEl.addEventListener("click", function() {
+      const target = index + 1;
+      if (target <= currentStep) {
+        document.getElementById(`section${currentStep}`)?.classList.remove("active");
+        document.getElementById(`section${target}`)?.classList.add("active");
+        updateProgress(target);
+        currentStep = target;
+      }
+    });
+  });
+
+  const vehicleList = document.getElementById("vehicleList");
+  if (vehicleList) vehicleList.innerHTML = '<div class="toggle-inline">Fahrzeuge werden geladen …</div>';
+
   fetch(vehicleCsvUrl)
     .then(res => res.text())
     .then(text => {
       const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       vehiclesData = parsed.data;
+      vehiclesLoaded = true;
       renderVehicleList();
     })
-    .catch(err => console.error("Fehler beim Laden der Fahrzeugdaten:", err));
+    .catch(err => {
+      console.error("Fehler beim Laden der Fahrzeugdaten:", err);
+      const vehicleList = document.getElementById("vehicleList");
+      if (vehicleList) vehicleList.innerHTML = `<div class="toggle-inline">Fahrzeuge konnten nicht geladen werden. Bitte Seite neu laden.</div>`;
+    });
   
   fetch(teamCsvUrl)
     .then(res => res.text())
     .then(text => {
       const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       teamData = parsed.data.filter(m => m["Aktives Mitglied?"] && m["Aktives Mitglied?"].toLowerCase() === "ja");
+      teamLoaded = true;
     })
-    .catch(err => console.error("Fehler beim Laden der Teamdaten:", err));
+    .catch(err => {
+      console.error("Fehler beim Laden der Teamdaten:", err);
+      teamLoaded = false;
+    });
 
 });
 
@@ -523,6 +549,10 @@ function toggleVehicleSelection(card) {
 }
 
 function prepareTeamAssignment() {
+  if (!vehiclesLoaded) {
+    alert("Fahrzeuge sind noch nicht vollständig geladen. Bitte kurz warten.");
+    return;
+  }
   const container = document.getElementById("assignmentContainer");
   container.innerHTML = "";
   globalAssigned = [];
@@ -585,6 +615,10 @@ function renderAssignmentAccordions(selectedCards) {
 }
 
 function openTeamModal(button) {
+  if (!teamLoaded) {
+    alert("Mannschaftsdaten sind noch nicht geladen. Bitte kurz warten.");
+    return;
+  }
   currentSeatBox = button.parentElement;
   document.getElementById("teamModal").classList.add("active");
   document.getElementById("teamSearch").value = "";
@@ -765,7 +799,6 @@ function updateGlobalSlotDisplay(assignmentBox) {
   slotDisplay.textContent = `Sitzplätze: ${assignedCount} / ${total}`;
 }
 
-function filterAssignmentCards() {}
 
 /* ---------------- Übersicht (Step 5) – Zusammenfassung aller Daten ---------------- */
 function updateSummary() {
