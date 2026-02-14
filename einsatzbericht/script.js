@@ -381,6 +381,9 @@ let teamLoaded = false;
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
+let vehicleSearchTerm = "";
+let showAvailableVehiclesOnly = false;
+let assignmentSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", function() {
   document.querySelectorAll(".step").forEach((stepEl, index) => {
@@ -608,6 +611,7 @@ function renderAssignmentAccordions(selectedCards) {
     container.appendChild(acc);
   });
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
+  filterAssignmentCards();
 }
 
 function openTeamModal(button) {
