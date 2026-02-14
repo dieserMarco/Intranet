@@ -33,7 +33,6 @@ body.member-management {
 }
 
 .container,
-.vehicle-category-container,
 .vehicle-assignment,
 .modal-content,
 .overview-container {
@@ -283,12 +282,12 @@ button,
 
 /* Fahrzeuge */
 #vehicleList { display: grid; gap: 10px; }
-.vehicle-category-container { padding: 12px; }
+.vehicle-category-container { padding: 10px 0; border: 0; background: transparent; backdrop-filter: none; }
 .vehicle-category-title {
   margin: 0 0 10px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255,75,75,0.16);
+  background: rgba(255,75,75,0.12); color: rgba(255, 224, 224, .95); font-weight: 800;
 }
 .vehicle-grid {
   display: grid;
@@ -296,10 +295,10 @@ button,
   gap: 10px;
 }
 .vehicle-card {
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.03);
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .vehicle-card:hover { transform: translateY(-1px); }
@@ -323,7 +322,8 @@ button,
   box-shadow: 0 0 0 1px rgba(255,75,75,0.35) inset;
 }
 .vehicle-card.disabled { opacity: .58; cursor: not-allowed; }
-.select-vehicle-button { width: 100%; }
+.select-vehicle-button { width: 100%; background: rgba(255,255,255,0.08); border:1px solid var(--line); }
+.vehicle-card.selected .select-vehicle-button { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; }
 
 /* Mannschaft */
 #assignmentContainer { margin-bottom: 12px; }
@@ -336,7 +336,7 @@ button,
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 8px;
 }
- .seat {
+.seat {
   min-height: 62px;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
@@ -349,7 +349,7 @@ button,
 .assigned-member { width: 100%; display: flex; align-items: center; gap: 8px; }
 .member-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .member-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-.member-role { font-weight: 700; cursor: pointer; padding: 2px 8px; border-radius: 999px; border:1px solid var(--line); background: rgba(255,255,255,.08); }
+.member-role { font-weight: 700; cursor: pointer; padding: 3px 8px; border-radius: 999px; border:1px solid var(--line); background: rgba(255,255,255,.06); color: var(--muted); font-size:.78rem; }
 .remove-assignment { cursor: pointer; font-weight: 700; color: #ffadad; }
 .assign-btn { width: 100%; }
 .role-einsatzleiter { background: rgba(241,196,15,.23); border-color: rgba(241,196,15,.45); }
@@ -450,6 +450,48 @@ button,
 .overview-item:last-child { border-bottom: none; }
 .overview-item .label { color: var(--muted); font-weight: 700; }
 
+.overview-report .report-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: rgba(255, 224, 224, .95);
+  margin-bottom: 2px;
+}
+.report-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.report-grid.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.report-grid.three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.report-chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.report-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+}
+.crew-list { display: grid; gap: 8px; }
+.crew-row {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr 1fr;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.15);
+}
+.crew-row span { color: var(--muted); }
+.stat-card {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(0,0,0,.16);
+}
+.stat-card h3 { margin: 0 0 6px; color: rgba(255,224,224,.95); font-size: .95rem; }
+.stat-card p { margin: 2px 0; color: var(--muted); }
+
+
 .saving-container,
 .success-message {
   min-height: 60vh;
@@ -479,6 +521,8 @@ button,
   .horizontal-group,
   .row { grid-template-columns: 1fr; }
   .progress-container { grid-template-columns: 1fr; }
+  .report-grid.two-col, .report-grid.three-col { grid-template-columns: 1fr; }
+  .crew-row { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
