@@ -401,30 +401,6 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     .catch(err => console.error("Fehler beim Laden der Teamdaten:", err));
 
-  const vehicleSearch = document.getElementById("vehicleSearch");
-  const vehicleAvailableOnly = document.getElementById("vehicleAvailableOnly");
-  const assignmentSearch = document.getElementById("assignmentSearch");
-
-  if (vehicleSearch) {
-    vehicleSearch.addEventListener("input", function() {
-      vehicleSearchTerm = this.value.toLowerCase().trim();
-      renderVehicleList();
-    });
-  }
-
-  if (vehicleAvailableOnly) {
-    vehicleAvailableOnly.addEventListener("change", function() {
-      showAvailableVehiclesOnly = this.checked;
-      renderVehicleList();
-    });
-  }
-
-  if (assignmentSearch) {
-    assignmentSearch.addEventListener("input", function() {
-      assignmentSearchTerm = this.value.toLowerCase().trim();
-      filterAssignmentCards();
-    });
-  }
 });
 
 const rolePermissions = {
@@ -477,10 +453,6 @@ function renderVehicleList() {
         const status = vehicle["Status"] ? vehicle["Status"].trim() : "";
         const seats = vehicle["Anzahl-Sitzplätze"] ? parseInt(vehicle["Anzahl-Sitzplätze"]) : 0;
 
-        if (showAvailableVehiclesOnly && status === "NEB") return;
-        const haystack = `${funkrufname} ${kennzeichen}`.toLowerCase();
-        if (vehicleSearchTerm && !haystack.includes(vehicleSearchTerm)) return;
-
         vehicleMapping[kennzeichen] = funkrufname;
 
         const card = document.createElement("div");
@@ -488,19 +460,25 @@ function renderVehicleList() {
         card.setAttribute("data-seats", seats);
         card.setAttribute("data-selected", "false");
 
+        let statusLabel = "Unbekannt";
         if (status === "NEB") {
           card.classList.add("disabled");
-          card.style.borderColor = "red";
+          card.classList.add("status-neb");
+          statusLabel = "Nicht einsatzbereit";
         } else if (status === "BEB") {
-          card.style.borderColor = "orange";
+          card.classList.add("status-beb");
+          statusLabel = "Bedingt einsatzbereit";
         } else if (status === "EB") {
-          card.style.borderColor = "green";
+          card.classList.add("status-eb");
+          statusLabel = "Einsatzbereit";
         }
 
         card.innerHTML = `
           <div class="vehicle-info">
-            <strong>${funkrufname}</strong><br>
+            <strong>${funkrufname}</strong>
             <small>${kennzeichen}</small>
+            <span class="vehicle-meta">Sitzplätze: ${seats || 0}</span>
+            <span class="status-pill">${statusLabel}</span>
           </div>
           <button class="select-vehicle-button">Auswählen</button>
         `;
@@ -596,7 +574,7 @@ function renderAssignmentAccordions(selectedCards) {
         seat.setAttribute("data-member-id", assignment.memberId);
         updateSeatColor(seat, assignment.role);
       } else {
-        seat.innerHTML = `<button onclick="openTeamModal(this)">Zuweisen</button>`;
+        seat.innerHTML = `<button class="assign-btn" onclick="openTeamModal(this)">Sitz ${i + 1} zuweisen</button>`;
       }
       seatContainer.appendChild(seat);
     }
@@ -690,7 +668,7 @@ function removeAssignment(seat) {
   }
   const index = globalAssigned.indexOf(memberId);
   if (index !== -1) globalAssigned.splice(index, 1);
-  seat.innerHTML = `<button onclick="openTeamModal(this)">Zuweisen</button>`;
+  seat.innerHTML = `<button class="assign-btn" onclick="openTeamModal(this)">Sitz ${i + 1} zuweisen</button>`;
   seat.removeAttribute("data-assigned");
   seat.removeAttribute("data-role");
   seat.removeAttribute("data-member-id");
@@ -749,19 +727,18 @@ function updateRole(selectElement) {
 
 function updateSeatColor(seat, role) {
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
+  seat.style.backgroundColor = "";
+  seat.style.color = "";
 
   if (role === "Einsatzleiter") {
-    seat.style.backgroundColor = "#f1c40f";  // Gelb
+    seat.classList.add("role-einsatzleiter");
   } else if (role === "Maschinist") {
-    seat.style.backgroundColor = "#B0B0B0";  // Grau
-    seat.style.color = "#000";              // Schwarz
+    seat.classList.add("role-maschinist");
   } else if (role === "Gruppenkommandant") {
-    seat.style.backgroundColor = "#3498db";  // Blau
+    seat.classList.add("role-gruppenkommandant");
   } else {
-    seat.style.backgroundColor = "#e74c3c";  // Rot
+    seat.classList.add("role-mannschaft");
   }
-
-  console.log("Manuelle Farbänderung:", seat.style.backgroundColor);
 }
 
 function sortAssignments(seatContainer) {
@@ -787,13 +764,7 @@ function updateGlobalSlotDisplay(assignmentBox) {
   slotDisplay.textContent = `Sitzplätze: ${assignedCount} / ${total}`;
 }
 
-function filterAssignmentCards() {
-  const cards = document.querySelectorAll(".vehicle-assignment");
-  cards.forEach(card => {
-    const text = card.querySelector("h2")?.innerText.toLowerCase() || "";
-    card.style.display = !assignmentSearchTerm || text.includes(assignmentSearchTerm) ? "block" : "none";
-  });
-}
+function filterAssignmentCards() {}
 
 /* ---------------- Übersicht (Step 5) – Zusammenfassung aller Daten ---------------- */
 function updateSummary() {

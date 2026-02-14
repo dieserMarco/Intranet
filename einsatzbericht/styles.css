@@ -51,29 +51,34 @@ body.member-management {
   backdrop-filter: none;
 }
 .progress-container {
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: linear-gradient(180deg, var(--card2), var(--card));
-}
-.progress-container {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 .step {
-  padding: 13px 10px;
-  border-right: 1px solid var(--line);
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   text-align: center;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
 }
-.step:last-child { border-right: none; }
-.step.active,
-.step.completed {
+.step.active {
   color: #fff;
+  border-color: rgba(255, 75, 75, 0.4);
   background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.step.completed {
+  color: rgba(220,255,230,.94);
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.16);
 }
 
 /* Sections */
@@ -202,6 +207,7 @@ select option { background-color: #141417; color: var(--text); }
 
 /* Buttons */
 .radio-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio-buttons.single-select { align-items: stretch; }
 .radio-buttons.single-select .radio-button { flex: 1; }
 
 button,
@@ -220,13 +226,16 @@ button,
   cursor: pointer;
 }
 
-.radio-button.active,
 .weiter-button,
 .select-vehicle-button,
 .modal-buttons button:first-child,
 .success-button {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   border: none;
+}
+.radio-button.active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255,255,255,0.3);
 }
 
 .button-container {
@@ -237,12 +246,29 @@ button,
 }
 #section1 .button-container { justify-content: flex-end; }
 
+#verletztePersonen-buttons .radio-button.active:first-child,
+#verletzteFeuerwehr-buttons .radio-button.active:first-child,
+#verletzteTiere-buttons .radio-button.active:first-child {
+  background: rgba(34,197,94,0.2);
+  border-color: rgba(34,197,94,0.4);
+}
+#verletztePersonen-buttons .radio-button.active:last-child,
+#verletzteFeuerwehr-buttons .radio-button.active:last-child,
+#verletzteTiere-buttons .radio-button.active:last-child {
+  background: rgba(255,138,61,0.2);
+  border-color: rgba(255,138,61,0.45);
+}
+
+
 /* Step 3/4 helper */
 .quick-tools {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 12px;
+}
+.quick-tools.compact .toggle-inline {
+  justify-content: center;
 }
 .toggle-inline {
   display: inline-flex;
@@ -262,27 +288,42 @@ button,
   margin: 0 0 10px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255,75,75,0.22);
+  background: rgba(255,75,75,0.16);
 }
 .vehicle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 10px;
 }
 .vehicle-card {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 10px;
-  text-align: center;
+  padding: 12px;
   background: rgba(0,0,0,0.2);
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform .18s ease, box-shadow .18s ease;
 }
 .vehicle-card:hover { transform: translateY(-1px); }
+.vehicle-card .vehicle-info { display: grid; gap: 3px; margin-bottom: 8px; }
+.vehicle-card .vehicle-info strong { font-size: 1.05rem; }
+.vehicle-card .vehicle-info small { color: var(--muted); }
+.vehicle-meta { color: var(--muted); font-size: .82rem; }
+.status-pill {
+  justify-self: start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.08);
+  font-size: .78rem;
+}
+.vehicle-card.status-eb .status-pill { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.16); color: #d7ffe1; }
+.vehicle-card.status-beb .status-pill { border-color: rgba(255,138,61,.4); background: rgba(255,138,61,.17); }
+.vehicle-card.status-neb .status-pill { border-color: rgba(255,75,75,.45); background: rgba(255,75,75,.16); }
 .vehicle-card.selected {
-  background: rgba(255,75,75,0.12);
+  background: rgba(255,75,75,0.1);
   box-shadow: 0 0 0 1px rgba(255,75,75,0.35) inset;
 }
-.vehicle-card.disabled { opacity: .55; cursor: not-allowed; }
+.vehicle-card.disabled { opacity: .58; cursor: not-allowed; }
+.select-vehicle-button { width: 100%; }
 
 /* Mannschaft */
 #assignmentContainer { margin-bottom: 12px; }
@@ -292,12 +333,12 @@ button,
 .seat-container {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 8px;
 }
-.seat {
+ .seat {
   min-height: 62px;
-  border: 1px dashed var(--line);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   background: rgba(0,0,0,0.25);
   padding: 8px;
@@ -308,8 +349,13 @@ button,
 .assigned-member { width: 100%; display: flex; align-items: center; gap: 8px; }
 .member-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .member-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-.member-role { font-weight: 700; cursor: pointer; }
-.remove-assignment { cursor: pointer; font-weight: 700; }
+.member-role { font-weight: 700; cursor: pointer; padding: 2px 8px; border-radius: 999px; border:1px solid var(--line); background: rgba(255,255,255,.08); }
+.remove-assignment { cursor: pointer; font-weight: 700; color: #ffadad; }
+.assign-btn { width: 100%; }
+.role-einsatzleiter { background: rgba(241,196,15,.23); border-color: rgba(241,196,15,.45); }
+.role-maschinist { background: rgba(148,163,184,.2); border-color: rgba(148,163,184,.45); }
+.role-gruppenkommandant { background: rgba(96,165,250,.2); border-color: rgba(96,165,250,.45); }
+.role-mannschaft { background: rgba(255,255,255,.04); }
 
 /* Modal */
 .modal {
@@ -353,8 +399,17 @@ button,
 .modal-content li label {
   display: flex;
   align-items: center;
-  padding: 8px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
   border-radius: 8px;
+}
+.modal-content li input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
 }
 .modal-content li label:hover { background: rgba(255,255,255,0.08); }
 .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
@@ -376,19 +431,20 @@ button,
 .modal-team-item:hover { background: rgba(255,75,75,0.2); }
 
 /* Summary + save */
-.overview-container { padding: 12px; }
+.overview-container { padding: 14px; }
+#summaryContainer { display: grid; gap: 10px; }
 .overview-section {
-  margin-bottom: 10px;
+  margin-bottom: 0;
   padding: 10px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(0,0,0,0.18);
 }
 .overview-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 220px 1fr;
   gap: 8px;
-  padding: 6px 0;
+  padding: 7px 0;
   border-bottom: 1px solid rgba(255,255,255,0.10);
 }
 .overview-item:last-child { border-bottom: none; }
@@ -422,11 +478,12 @@ button,
   .grid-container,
   .horizontal-group,
   .row { grid-template-columns: 1fr; }
-  .progress-container { grid-template-columns: repeat(5, minmax(130px, 1fr)); overflow-x: auto; }
+  .progress-container { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
   .app-shell { padding: 12px; }
   .quick-tools { grid-template-columns: 1fr; }
   .button-container { flex-direction: column; }
+  .overview-item { grid-template-columns: 1fr; }
 }
