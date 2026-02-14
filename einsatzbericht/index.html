@@ -17,7 +17,8 @@
   <!-- Externes Script -->
   <script src="script.js" defer></script>
 </head>
-<body>
+<body class="member-management">
+  <div class="app-shell">
   <!-- Progress-Bar -->
   <div class="progress-wrapper">
     <div class="progress-container">
@@ -427,6 +428,10 @@
   
   <!-- Step 3: Fahrzeuge -->
   <div class="container" id="section3">
+    <div class="quick-tools">
+      <input type="text" id="vehicleSearch" placeholder="Fahrzeug suchen (Name/Kennzeichen)">
+      <label class="toggle-inline"><input type="checkbox" id="vehicleAvailableOnly">Nur verfügbare</label>
+    </div>
     <div id="vehicleList"></div>
     <div class="button-container">
       <button type="button" class="zurueck-button" onclick="prevSection(3)">Zurück</button>
@@ -436,6 +441,10 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
+    <div class="quick-tools">
+      <input type="text" id="assignmentSearch" placeholder="Mannschaftszuweisung filtern (Fahrzeug)">
+      <span class="toggle-inline">Tipp: Klicke auf leeren Sitzplatz zum Zuweisen</span>
+    </div>
     <div id="assignmentContainer"></div>
     <div class="button-container">
       <button type="button" class="zurueck-button" onclick="prevSection(4)">Zurück</button>
@@ -453,6 +462,8 @@
     </div>
   </div>
   
+  </div>
+
   <!-- Modale Fenster -->
   <!-- Modal für Meldung -->
   <div id="modal-meldung" class="modal">

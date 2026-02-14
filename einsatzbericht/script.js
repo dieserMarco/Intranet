@@ -379,6 +379,9 @@ let currentSeatBox = null;
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
+let vehicleSearchTerm = "";
+let showAvailableVehiclesOnly = false;
+let assignmentSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", function() {
   fetch(vehicleCsvUrl)
@@ -397,6 +400,31 @@ document.addEventListener("DOMContentLoaded", function() {
       teamData = parsed.data.filter(m => m["Aktives Mitglied?"] && m["Aktives Mitglied?"].toLowerCase() === "ja");
     })
     .catch(err => console.error("Fehler beim Laden der Teamdaten:", err));
+
+  const vehicleSearch = document.getElementById("vehicleSearch");
+  const vehicleAvailableOnly = document.getElementById("vehicleAvailableOnly");
+  const assignmentSearch = document.getElementById("assignmentSearch");
+
+  if (vehicleSearch) {
+    vehicleSearch.addEventListener("input", function() {
+      vehicleSearchTerm = this.value.toLowerCase().trim();
+      renderVehicleList();
+    });
+  }
+
+  if (vehicleAvailableOnly) {
+    vehicleAvailableOnly.addEventListener("change", function() {
+      showAvailableVehiclesOnly = this.checked;
+      renderVehicleList();
+    });
+  }
+
+  if (assignmentSearch) {
+    assignmentSearch.addEventListener("input", function() {
+      assignmentSearchTerm = this.value.toLowerCase().trim();
+      filterAssignmentCards();
+    });
+  }
 });
 
 const rolePermissions = {
@@ -446,10 +474,14 @@ function renderVehicleList() {
       category.vehicles.forEach(vehicle => {
         const kennzeichen = vehicle["Kennzeichen"] || "Unbekannt";
         const funkrufname = vehicle["Funkrufname"] || "Ohne Funkrufname";
-        vehicleMapping[kennzeichen] = funkrufname;
-
         const status = vehicle["Status"] ? vehicle["Status"].trim() : "";
         const seats = vehicle["Anzahl-Sitzplätze"] ? parseInt(vehicle["Anzahl-Sitzplätze"]) : 0;
+
+        if (showAvailableVehiclesOnly && status === "NEB") return;
+        const haystack = `${funkrufname} ${kennzeichen}`.toLowerCase();
+        if (vehicleSearchTerm && !haystack.includes(vehicleSearchTerm)) return;
+
+        vehicleMapping[kennzeichen] = funkrufname;
 
         const card = document.createElement("div");
         card.classList.add("vehicle-card");
@@ -490,7 +522,9 @@ function renderVehicleList() {
         gridEl.appendChild(card);
       });
 
-      container.appendChild(categoryContainer);
+      if (gridEl.children.length > 0) {
+        container.appendChild(categoryContainer);
+      }
     }
   });
 }
@@ -569,6 +603,7 @@ function renderAssignmentAccordions(selectedCards) {
     container.appendChild(acc);
   });
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
+  filterAssignmentCards();
 }
 
 function openTeamModal(button) {
@@ -750,6 +785,14 @@ function updateGlobalSlotDisplay(assignmentBox) {
   const assignedCount = Array.from(seatContainer.children).filter(child => child.getAttribute("data-assigned") === "true").length;
   const slotDisplay = assignmentBox.querySelector(".slot-display");
   slotDisplay.textContent = `Sitzplätze: ${assignedCount} / ${total}`;
+}
+
+function filterAssignmentCards() {
+  const cards = document.querySelectorAll(".vehicle-assignment");
+  cards.forEach(card => {
+    const text = card.querySelector("h2")?.innerText.toLowerCase() || "";
+    card.style.display = !assignmentSearchTerm || text.includes(assignmentSearchTerm) ? "block" : "none";
+  });
 }
 
 /* ---------------- Übersicht (Step 5) – Zusammenfassung aller Daten ---------------- */
