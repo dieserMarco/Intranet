@@ -379,6 +379,9 @@ let currentSeatBox = null;
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
+let vehicleSearchTerm = "";
+let showAvailableVehiclesOnly = false;
+let assignmentSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", function() {
   fetch(vehicleCsvUrl)
@@ -578,6 +581,7 @@ function renderAssignmentAccordions(selectedCards) {
     container.appendChild(acc);
   });
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
+  filterAssignmentCards();
 }
 
 function openTeamModal(button) {
