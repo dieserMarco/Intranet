@@ -17,7 +17,8 @@
   <!-- Externes Script -->
   <script src="script.js" defer></script>
 </head>
-<body>
+<body class="member-management">
+  <div class="app-shell">
   <!-- Progress-Bar -->
   <div class="progress-wrapper">
     <div class="progress-container">
@@ -427,6 +428,9 @@
   
   <!-- Step 3: Fahrzeuge -->
   <div class="container" id="section3">
+    <div class="quick-tools compact">
+      <span class="toggle-inline">Fahrzeuge nach Kategorie auswählen (Fahrzeug / Anhänger / Gebäude).</span>
+    </div>
     <div id="vehicleList"></div>
     <div class="button-container">
       <button type="button" class="zurueck-button" onclick="prevSection(3)">Zurück</button>
@@ -436,6 +440,9 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
+    <div class="quick-tools compact">
+      <span class="toggle-inline">Tipp: Sitzplatz anklicken, Rolle wählen und Mitglied zuweisen.</span>
+    </div>
     <div id="assignmentContainer"></div>
     <div class="button-container">
       <button type="button" class="zurueck-button" onclick="prevSection(4)">Zurück</button>
@@ -453,6 +460,8 @@
     </div>
   </div>
   
+  </div>
+
   <!-- Modale Fenster -->
   <!-- Modal für Meldung -->
   <div id="modal-meldung" class="modal">

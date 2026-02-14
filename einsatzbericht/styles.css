@@ -1,794 +1,489 @@
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #212121;
-      color: #f0f0f0;
-      margin: 0;
-      padding-top: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    /* Progress-Bar */
-    .progress-wrapper {
-      width: 100%;
-      max-width: 1015px;
-      margin: 0 auto 40px auto;
-    }
-    .progress-container {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      background-color: #2a2a2a;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 15px rgba(0,0,0,0.7);
-    }
-    .step {
-      flex-grow: 1;
-      padding: 20px;
-      background-color: #3a3a3a;
-      color: #999;
-      text-align: center;
-      font-weight: bold;
-      border-right: 1px solid #555;
-      cursor: pointer;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .step.active, .step.completed {
-      background-color: #AB2328;
-      color: #fff;
-    }
-    .step:first-child {
-      border-top-left-radius: 8px;
-      border-bottom-left-radius: 8px;
-    }
-    .step:last-child {
-      border-top-right-radius: 8px;
-      border-bottom-right-radius: 8px;
-      border-right: none;
-    }
-    /* Container für die einzelnen Schritte */
-    .container {
-      width: 100%;
-      max-width: 960px;
-      background-color: #2a2a2a;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.7);
-      margin: 20px;
-      display: none;
-      position: relative;
-    }
-    .container.active {
-      display: block;
-    }
-    h2 {
-      background-color: #AB2328;
-      color: #fff;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    .form-group label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .form-group input,
-    .address-row input {
-      width: 100%;
-      height: 40px;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-    }
-    /* Dropdown im Teammodal */
-    #teamModal select#modalRoleSelect {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
-    .row {
-      display: flex;
-      gap: 10px;
-    }
-    .row .column {
-      flex: 1;
-    }
-    .searchable-select {
-      position: relative;
-    }
-    .searchable-select input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-    }
-    .options-container {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #444;
-      border-radius: 5px;
-      background-color: #3a3a3a;
-      display: none;
-      position: absolute;
-      width: 100%;
-      z-index: 10;
-    }
-    .option {
-      padding: 10px;
-      cursor: pointer;
-    }
-    .option:hover {
-      background-color: #555;
-    }
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 600px) {
-      .grid-container {
-        grid-template-columns: 1fr;
-      }
-    }
-    /* Radio-Buttons */
-    .radio-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .radio-buttons.single-select .radio-button {
-      flex: 1;
-    }
-    .radio-button {
-      background-color: #555;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-    .radio-button:hover {
-      background-color: #666;
-    }
-    .radio-button.active {
-      background-color: #AB2328;
-      transform: scale(1.02);
-    }
-    /* Anzeige ausgewählter Optionen als Chips */
-    .selected-wrapper {
-      position: relative;
-    }
-    .selected-options {
-      background-color: #444;
-      border-radius: 5px;
-      padding: 5px;
-      min-height: 30px;
-      line-height: 1.5;
-      padding-right: 50px;
-    }
-    .chip {
-      display: inline-block;
-      background-color: #AB2328;
-      color: #fff;
-      padding: 5px 10px;
-      margin: 2px;
-      border-radius: 16px;
-      font-size: 0.9em;
-    }
-    .chip .remove-chip {
-      margin-left: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .select-tile {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #555;
-      color: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .select-tile:hover {
-      background-color: #666;
-    }
-    .textareas-container {
-      margin-top: 40px;
-    }
-    .textareas-container .form-group textarea {
-      width: 100%;
-      height: 150px;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-      overflow: auto;
-      resize: none;
-    }
-    .button-container {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    #section1 form {
-      display: flex;
-      flex-direction: column;
-      min-height: 400px;
-    }
-    #section1 .button-container {
-      margin-top: auto;
-      justify-content: flex-end;
-    }
-    .weiter-button, .zurueck-button {
-      background-color: #AB2328;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s;
-    }
-    .weiter-button:active, .zurueck-button:active {
-      background-color: #921b22;
-    }
+:root {
+  --bg: #0b0b10;
+  --card: rgba(255, 255, 255, 0.08);
+  --card2: rgba(255, 255, 255, 0.12);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #ff4b4b;
+  --accent2: #ff8a3d;
+  --ok: #22c55e;
+  --radius: 18px;
+}
 
+* { box-sizing: border-box; }
 
-/* Container für alle Fahrzeug-Karten */
-#vehicleList {
-  display: grid; 
-  grid-template-columns: 1fr;
-  gap: 10px;
-  max-width: 1200px;
+body.member-management {
+  margin: 0;
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 800px at 15% 10%, rgba(255, 75, 75, 0.35), transparent 60%),
+    radial-gradient(900px 650px at 80% 15%, rgba(255, 138, 61, 0.25), transparent 55%),
+    linear-gradient(180deg, #141417 0%, #0b0b10 100%);
+}
+
+.app-shell {
+  max-width: 1300px;
   margin: 0 auto;
-}
-
-
-
-
-
-/* Einzelne Fahrzeug-Karte */
-.vehicle-card {
-  /* width: 220px;  <-- Entfernen, damit die Karte im Grid flexibel ist */
-  background-color: #2a2a2a;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-  cursor: pointer;
-  text-align: center;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-
-    .vehicle-card.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .vehicle-card.selected {
-      border-color: #b32428;
-      background-color: #3a3a3a;
-      transform: scale(1.03);
-      box-shadow: 0 0 15px rgba(179,36,40,0.8);
-    }
-    .select-vehicle-button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      font-size: 0.9em;
-      background-color: #b32428;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .select-vehicle-button:hover {
-      background-color: #8a1e23;
-    }
-    #assignmentContainer {
-      width: 100%;
-      margin-bottom: 20px;
-    }
-    .vehicle-assignment {
-      border: 1px solid #444;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      padding: 10px;
-    }
-    .vehicle-assignment h2 {
-      margin: 0 0 5px 0;
-    }
-    .vehicle-assignment h2 small {
-      font-size: 0.8em;
-      color: #bbb;
-      display: block;
-    }
-    .slot-display {
-      margin-top: 5px;
-      font-size: 0.9em;
-    }
-    .seat-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .seat {
-      padding: 10px;
-      border: 1px dashed #777;
-      border-radius: 4px;
-      background-color: #1a1a1a;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .seat button {
-      background-color: transparent;
-      border: none;
-      color: #007BFF;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-    .assigned-member {
-      display: flex;
-      align-items: center;
-      padding: 5px;
-      border: 1px solid #bbb;
-      border-radius: 3px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-    .member-name {
-      white-space: nowrap;
-    }
-    .member-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-    }
-    .member-role {
-      margin-right: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .remove-assignment {
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .role-einsatzleiter {
-      background-color: #f1c40f;
-      color: #000;
-    }
-    .role-maschinist {
-  background-color: #B0B0B0 !important; /* Silber/Grau */
-  color: #000 !important; /* Schwarzer Text */
-  border: 1px solid #999 !important; /* Rahmen für bessere Sichtbarkeit */
-}
-
-    .role-gruppenkommandant {
-      background-color: #3498db;
-      color: #fff;
-    }
-    .role-mannschaft {
-      background-color: #e74c3c;
-      color: #fff;
-    }
-    /* Modale Fenster */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal.active {
-      display: flex;
-    }
-    .modal-content {
-      background-color: #2a2a2a;
-      padding: 20px;
-      border: 1px solid #444;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 8px;
-      position: relative;
-    }
-    .close, .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .modal-content h3 {
-      text-align: center;
-      margin-top: 0;
-    }
-    .modal-content ul {
-      list-style: none;
-      padding-left: 0;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-    }
-    .modal-content li {
-      margin-bottom: 10px;
-    }
-    .modal-content li label {
-      display: flex;
-      align-items: center;
-      padding: 6px;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-    }
-    .modal-content li label:hover {
-      background-color: #3a3a3a;
-    }
-    .modal-content input[type="checkbox"] {
-      accent-color: #AB2328;
-      width: 18px;
-      height: 18px;
-      margin-right: 8px;
-    }
-    .modal-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-    .modal-buttons button {
-      background-color: #AB2328;
-      border: none;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s;
-    }
-    .modal-buttons button:hover {
-      background-color: #921b22;
-    }
-    .search-input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background-color: #3a3a3a;
-      color: #f0f0f0;
-      box-sizing: border-box;
-    }
-    .modal-team-list {
-      max-height: 250px;
-      overflow-y: auto;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background-color: #3a3a3a;
-      margin-top: 10px;
-    }
-    .modal-team-item {
-      padding: 8px;
-      border-bottom: 1px solid #444;
-      cursor: pointer;
-    }
-    .modal-team-item:hover {
-      background-color: #444;
-    }
-    /* Übersicht – Modernes, schlichtes Design */
-    .overview-container {
-      max-width: 800px;
-      margin: 20px auto;
-      background: #2a2a2a;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-    .overview-header h1 {
-      color: #AB2328;
-      font-size: 1.8em;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .overview-section {
-      margin-bottom: 15px;
-      padding: 10px;
-      background: #333;
-      border-radius: 4px;
-    }
-    .overview-section h2 {
-      font-size: 1.2em;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-    .overview-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid #444;
-    }
-    .overview-item:last-child {
-      border-bottom: none;
-    }
-    .overview-item .label {
-      font-weight: 600;
-      margin-right: 10px;
-      color: #ccc;
-    }
-    .overview-item span[contenteditable] {
-      outline: none;
-    }
-    /* Zusätzliche Styles für den Speichervorgang */
-    .saving-container {
-      text-align: center;
-      font-size: 1.7em;
-      font-weight: bold;
-      color: #AB2328;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 60vh;
-    }
-    .loader {
-      border: 8px solid #f3f3f3;
-      border-top: 8px solid #AB2328;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .success-message {
-      text-align: center;
-      font-size: 1.7em;
-      font-weight: bold;
-      color: #32cd32;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 80vh;
-    }
-    .success-checkmark {
-      width: 80px;
-      height: 80px;
-      position: relative;
-      animation: fadeInCheck 0.5s ease-in-out forwards;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 100px;
-      margin-top: -50px;  
-    }
-
- /* Container für jede Fahrzeug-Kategorie */
-/* Container für jede Fahrzeug-Kategorie */
-.vehicle-category-container {
-  width: 100%;              /* immer volle Breite */
-  max-width: 1200px;        /* … aber maximal 1200 px */
-  margin: 0 auto;           /* zentriert den Container */
-  box-sizing: border-box;
-  border: 1px solid #444;
-  border-radius: 8px;
-  margin-bottom: 20px;
   padding: 20px;
-  background-color: #2a2a2a;
+  display: grid;
+  gap: 16px;
 }
+
+.container,
+.vehicle-category-container,
+.vehicle-assignment,
+.modal-content,
+.overview-container {
+  background: linear-gradient(180deg, var(--card2), var(--card));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+}
+
+/* Progress */
+.progress-wrapper {
+  overflow: visible;
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+.progress-container {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+.step {
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+}
+.step.active {
+  color: #fff;
+  border-color: rgba(255, 75, 75, 0.4);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.step.completed {
+  color: rgba(220,255,230,.94);
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.16);
+}
+
+/* Sections */
+.container {
+  display: none;
+  padding: 16px;
+}
+.container.active { display: block; }
 
 fieldset.group-box {
-  background-color: #2a2a2a;   /* oder #333, falls du es dunkler möchtest */
-  border: 1px solid #444;      /* etwas dunklerer Rand */
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  margin: 0 0 12px;
+  padding: 14px 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  min-inline-size: 0;
 }
-
-/* Die Legend-Überschrift mit kontrastierendem Hintergrund oder Schriftfarbe */
 fieldset.group-box legend {
-  padding: 0 10px;
-  font-weight: bold;
-  color: #fff;
-  /* Wenn du möchtest, dass der Legend-Bereich selbst auch eine andere Farbe hat:
-     background-color: #AB2328; 
-     border-radius: 4px;
-     padding: 5px 10px;
-  */
-}
-  
-.vehicle-category-title {
-  display: block;
-  width: 100%;
-  background-color: #AB2328;
-  color: #fff;
-  font-weight: bold;
-  padding: 8px 0;
-  border-radius: 4px;
-  margin-bottom: 20px; /* Mehr Abstand unter der Überschrift */
-  font-size: 1.2em;
+  color: rgba(255, 201, 201, 0.95);
+  font-weight: 700;
+  padding: 0 6px;
 }
 
-  
-.vehicle-grid {
+h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  color: rgba(255, 201, 201, 0.95);
+}
+
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.horizontal-group,
+.row,
+.grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+.row .column { min-width: 0; }
 
-
-.vehicle-card {
-  /* width: 220px;  // diese Zeile entfernen oder überschreiben */
-  flex: 0 0 calc(33.333% - 10px);   /* 3 Karten je Zeile, abzüglich gap */
-  background-color: #2a2a2a;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-  cursor: pointer;
-  text-align: center;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-     
-    @keyframes drawCheck {
-      0% { stroke-dasharray: 0, 52; stroke-dashoffset: 52; }
-      100% { stroke-dasharray: 52, 0; stroke-dashoffset: 0; }
-    }
-    @keyframes fadeInCheck {
-      0% { opacity: 0; transform: scale(0.8); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    /* Neue Styles für die Erfolgsscreen-Buttons */
-    .button-container-success {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      margin-top: 5px;
-    }
-    .success-button {
-      background-color: #AB2328;
-      color: #fff;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1.2em;
-      transition: background-color 0.3s, transform 0.2s;
-      margin-bottom: 10px; /* Verringert den Abstand zu den Buttons */
-    }
-    .success-button:hover {
-      background-color: #921b22;
-      transform: scale(1.05);
-    }
-
-    .horizontal-group {
-  display: flex;    /* sorgt dafür, dass die Kindelemente nebeneinander stehen */
-  gap: 10px;        /* Abstand zwischen den Feldern */
-  margin-bottom: 20px; /* optionaler Abstand nach unten */
-}
-
-.form-group {
-  flex: 1;          /* verteilt den Platz gleichmäßig auf die drei Felder */
-  margin-bottom: 0; /* damit unter den Feldern kein zusätzlicher Abstand entsteht */
-}
-
-.verrechenbar-block {
-  margin-top: 20px; /* nur Verrechenbar nach unten schieben */
-}
-
-.radio-button.full-width {
+input, select, textarea {
   width: 100%;
-  text-align: center;
-  height: 40px;              /* gleiche Höhe wie Inputs */
-  padding: 10px;             /* gleicht den Innenabstand an */
-  font-size: 16px;           /* gleiche Schriftgröße */
-  box-sizing: border-box;    /* verhindert Überlaufen */
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,0.25);
+  color: var(--text);
+  outline: none;
+}
+textarea { min-height: 120px; resize: vertical; }
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(255,75,75,0.5);
+  box-shadow: 0 0 0 3px rgba(255,75,75,0.18);
+}
+
+select {
+  background-color: rgba(0, 0, 0, 0.55);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+select option { background-color: #141417; color: var(--text); }
+
+.searchable-select,
+.selected-wrapper { position: relative; }
+.options-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #16161d;
+  display: none;
+  z-index: 10;
+}
+.option {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.option:last-child { border-bottom: none; }
+.option:hover { background: rgba(255,75,75,0.2); }
+
+/* Chip / modal selector */
+.selected-options {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.18);
+  padding: 7px 45px 7px 7px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,75,75,0.35);
+  background: rgba(255,75,75,0.22);
+}
+.chip .remove-chip { cursor: pointer; font-weight: 700; }
+.select-tile {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.18);
+  cursor: pointer;
+}
+
+/* Buttons */
+.radio-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio-buttons.single-select { align-items: stretch; }
+.radio-buttons.single-select .radio-button { flex: 1; }
+
+button,
+.radio-button,
+.weiter-button,
+.zurueck-button,
+.select-vehicle-button,
+.modal-buttons button,
+.success-button {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+}
+
+.weiter-button,
+.select-vehicle-button,
+.modal-buttons button:first-child,
+.success-button {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+}
+.radio-button.active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+#section1 .button-container { justify-content: flex-end; }
+
+#verletztePersonen-buttons .radio-button.active:first-child,
+#verletzteFeuerwehr-buttons .radio-button.active:first-child,
+#verletzteTiere-buttons .radio-button.active:first-child {
+  background: rgba(34,197,94,0.2);
+  border-color: rgba(34,197,94,0.4);
+}
+#verletztePersonen-buttons .radio-button.active:last-child,
+#verletzteFeuerwehr-buttons .radio-button.active:last-child,
+#verletzteTiere-buttons .radio-button.active:last-child {
+  background: rgba(255,138,61,0.2);
+  border-color: rgba(255,138,61,0.45);
+}
+
+
+/* Step 3/4 helper */
+.quick-tools {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.quick-tools.compact .toggle-inline {
+  justify-content: center;
+}
+.toggle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.2);
+  color: var(--muted);
+}
+
+/* Fahrzeuge */
+#vehicleList { display: grid; gap: 10px; }
+.vehicle-category-container { padding: 12px; }
+.vehicle-category-title {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,75,75,0.16);
+}
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+.vehicle-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.vehicle-card:hover { transform: translateY(-1px); }
+.vehicle-card .vehicle-info { display: grid; gap: 3px; margin-bottom: 8px; }
+.vehicle-card .vehicle-info strong { font-size: 1.05rem; }
+.vehicle-card .vehicle-info small { color: var(--muted); }
+.vehicle-meta { color: var(--muted); font-size: .82rem; }
+.status-pill {
+  justify-self: start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.08);
+  font-size: .78rem;
+}
+.vehicle-card.status-eb .status-pill { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.16); color: #d7ffe1; }
+.vehicle-card.status-beb .status-pill { border-color: rgba(255,138,61,.4); background: rgba(255,138,61,.17); }
+.vehicle-card.status-neb .status-pill { border-color: rgba(255,75,75,.45); background: rgba(255,75,75,.16); }
+.vehicle-card.selected {
+  background: rgba(255,75,75,0.1);
+  box-shadow: 0 0 0 1px rgba(255,75,75,0.35) inset;
+}
+.vehicle-card.disabled { opacity: .58; cursor: not-allowed; }
+.select-vehicle-button { width: 100%; }
+
+/* Mannschaft */
+#assignmentContainer { margin-bottom: 12px; }
+.vehicle-assignment { padding: 12px; margin-bottom: 10px; }
+.vehicle-assignment h2 { margin-bottom: 6px; }
+.slot-display { color: var(--muted); font-size: .88rem; }
+.seat-container {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+ .seat {
+  min-height: 62px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.assigned-member { width: 100%; display: flex; align-items: center; gap: 8px; }
+.member-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.member-role { font-weight: 700; cursor: pointer; padding: 2px 8px; border-radius: 999px; border:1px solid var(--line); background: rgba(255,255,255,.08); }
+.remove-assignment { cursor: pointer; font-weight: 700; color: #ffadad; }
+.assign-btn { width: 100%; }
+.role-einsatzleiter { background: rgba(241,196,15,.23); border-color: rgba(241,196,15,.45); }
+.role-maschinist { background: rgba(148,163,184,.2); border-color: rgba(148,163,184,.45); }
+.role-gruppenkommandant { background: rgba(96,165,250,.2); border-color: rgba(96,165,250,.45); }
+.role-mannschaft { background: rgba(255,255,255,.04); }
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 10, 0.55);
+  backdrop-filter: blur(10px);
+  z-index: 1200;
+}
+.modal.active { display: flex; }
+
+.modal-content {
+  width: min(760px, calc(100% - 32px));
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  background: rgba(18, 18, 24, 0.95);
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.05));
+  box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+
+.close,
+.close-modal {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.modal-content li label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.modal-content li input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+.modal-content li label:hover { background: rgba(255,255,255,0.08); }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+
+.search-input { margin-bottom: 8px; }
+.modal-team-list {
+  max-height: 260px;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,0.18);
+}
+.modal-team-item {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.modal-team-item:last-child { border-bottom: none; }
+.modal-team-item:hover { background: rgba(255,75,75,0.2); }
+
+/* Summary + save */
+.overview-container { padding: 14px; }
+#summaryContainer { display: grid; gap: 10px; }
+.overview-section {
+  margin-bottom: 0;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,0.18);
+}
+.overview-item {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.overview-item:last-child { border-bottom: none; }
+.overview-item .label { color: var(--muted); font-weight: 700; }
+
+.saving-container,
+.success-message {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.loader {
+  border: 8px solid rgba(255,255,255,0.2);
+  border-top: 8px solid var(--accent);
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .hidden { display: none; }
 
-.input-row {
-  display: flex;
-  align-items: center;
+@media (max-width: 1080px) {
+  .grid-container,
+  .horizontal-group,
+  .row { grid-template-columns: 1fr; }
+  .progress-container { grid-template-columns: 1fr; }
 }
 
-.input-row input {
-  flex: 0 0 90%;    /* Feld nimmt 70% Breite */
-  margin-right: 6px;
+@media (max-width: 640px) {
+  .app-shell { padding: 12px; }
+  .quick-tools { grid-template-columns: 1fr; }
+  .button-container { flex-direction: column; }
+  .overview-item { grid-template-columns: 1fr; }
 }
-
-.now-btn {
-  flex: 0 0 auto;
-  padding: 4px 6px;
-  font-size: 0.9em;
-  background: #444;
-  border: 1px solid #666;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #fff;
-  height: 100%;     /* gleiche Höhe wie Input */
-}
-
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Eingabefeld kürzer, damit der Button daneben passt */
-.input-row input {
-  flex: 0 0 78%;   /* kannst du auf 70–85% anpassen */
-}
-
-/* "Jetzt"-Buttons erben radio-button-Look, bekommen nur Layout-Anpassung */
-.set-now-btn {
-  height: 40px;                 /* gleiche Höhe wie Inputs */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;           /* gleiche Innenabstände */
-}
-
-/* Aktiver Zustand */
-.set-now-btn:active {
-  background-color: #AB2328;
-  transform: scale(0.98);
-}
-
-
-
-  </style>
