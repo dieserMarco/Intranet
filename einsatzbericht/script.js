@@ -488,21 +488,13 @@ function renderVehicleList() {
             </div>
             <div class="vehicle-actions">
               <button type="button" class="vehicle-plate-btn" disabled>${kennzeichen}</button>
-              <button type="button" class="vehicle-status-btn">Aktualisieren</button>
-              <button type="button" class="select-vehicle-button">Auswählen</button>
+              <button type="button" class="vehicle-status-btn">EB</button>
+              <button type="button" class="vehicle-seats-btn" disabled>Sitzplätze: ${Number.isFinite(seats) ? seats : 0}</button>
             </div>
           </div>
         `;
 
         setVehicleStatus(card, status);
-
-        const selectBtn = card.querySelector(".select-vehicle-button");
-        selectBtn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          if (!card.classList.contains("disabled")) {
-            toggleVehicleSelection(card);
-          }
-        });
 
         const statusBtn = card.querySelector(".vehicle-status-btn");
         statusBtn.addEventListener("click", function(e) {
@@ -511,7 +503,7 @@ function renderVehicleList() {
         });
 
         card.addEventListener("click", function(e) {
-          if (e.target.closest(".vehicle-status-btn") || e.target.closest(".vehicle-plate-btn") || e.target.closest(".select-vehicle-button")) {
+          if (e.target.closest(".vehicle-status-btn") || e.target.closest(".vehicle-plate-btn") || e.target.closest(".vehicle-seats-btn")) {
             return;
           }
           if (!card.classList.contains("disabled")) {
@@ -535,7 +527,7 @@ function setVehicleStatus(card, status) {
 
   const statusButton = card.querySelector('.vehicle-status-btn');
   if (statusButton) {
-    statusButton.textContent = `Aktualisieren · ${normalized}`;
+    statusButton.textContent = normalized;
     statusButton.title = VEHICLE_STATUS_LABELS[normalized];
   }
 
@@ -560,12 +552,10 @@ function toggleVehicleSelection(card) {
   if (isSelected) {
     card.setAttribute("data-selected", "false");
     card.classList.remove("selected");
-    card.querySelector(".select-vehicle-button").textContent = "Auswählen";
     delete savedAssignments[kennzeichen];
   } else {
     card.setAttribute("data-selected", "true");
     card.classList.add("selected");
-    card.querySelector(".select-vehicle-button").textContent = "Ausgewählt";
   }
 }
 
