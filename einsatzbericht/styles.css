@@ -124,6 +124,19 @@ input:focus, select:focus, textarea:focus, .search-input:focus {
   box-shadow: 0 0 0 3px rgba(255,75,75,0.18);
 }
 
+
+.input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.input-row .set-now-btn {
+  white-space: nowrap;
+  min-width: 74px;
+  padding-inline: 14px;
+}
+
 .searchable-select { position: relative; }
 .options-container {
   position: absolute;
@@ -356,6 +369,7 @@ button,
   .container { padding: 12px; }
   .button-container { flex-direction: column; }
   .vehicle-grid { grid-template-columns: 1fr; }
+  .input-row .set-now-btn { min-width: 68px; }
 }
 
 .role-einsatzleiter{background:rgba(241,196,15,.22);color:#ffe9a7;border:1px solid rgba(241,196,15,.35);}
