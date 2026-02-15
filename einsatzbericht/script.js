@@ -888,6 +888,57 @@ function getChipValues(containerId) {
   return values.join(", ");
 }
 
+
+function withUnklar(value, fallback = '[unklar]') {
+  const v = (value || '').toString().trim();
+  return v ? v : fallback;
+}
+
+function buildEinsatzberichtText(formData) {
+  const lines = [
+    'Übersicht',
+    `- Einsatz #${withUnklar(formData.id)}`,
+    `- Stichwort: ${withUnklar(formData.einsatzStichwort)}`,
+    `- Objekt: ${withUnklar(formData.objekt)}`,
+    '',
+    'Zeitlinie',
+    `- Alarmierung: ${withUnklar(formData.datum)} ${withUnklar(formData.uhrzeitAlarmierung)}`,
+    `- Einsatzende: ${withUnklar(formData.einsatzEnde)} ${withUnklar(formData.uhrzeitRueckkehr)}`,
+    '',
+    'Ort',
+    `- Adresse: ${withUnklar(formData.einsatzortStrasse)} ${withUnklar(formData.hausnummer, '')}`.trim(),
+    `- PLZ/Bezirk: ${withUnklar(formData.einsatzortPLZ)} ${withUnklar(formData.einsatzortBezirk)}`,
+    '',
+    'Lage & Maßnahmen',
+    `- Lage beim Eintreffen: ${withUnklar(formData.lageEintreffen)}`,
+    `- Maßnahmen: ${withUnklar(formData.massnahmenEinsatzort)}`,
+    `- Bemerkungen: ${withUnklar(formData.bemerkungen)}`,
+    '',
+    'Status',
+    `- Alarmierung: ${withUnklar(formData.alarmierung)}`,
+    `- Wetter: ${withUnklar(formData.wetter)}`,
+    `- Gefahr: ${withUnklar(formData.gefahrenklasse)}`,
+    `- Meldung: ${withUnklar(formData.meldung)}`,
+    `- Anwesend: ${withUnklar(formData.anwesend)}`,
+    '',
+    'Abschluss',
+    `- Bericht erstellt durch: ${anonymizePersonRef(formData.berichtErstelltDurch, 'Bearbeiter:in')}`
+  ];
+
+  return lines.join('\n');
+}
+function anonymizePersonRef(value, fallback = 'Einsatzkraft') {
+  const raw = (value || '').trim();
+  if (!raw) return '–';
+
+  const idMatch = raw.match(/^(\d{1,8})\b/);
+  if (idMatch) {
+    return `Mitglied #${idMatch[1]}`;
+  }
+
+  return fallback;
+}
+
 /* ---------------- Neue Funktionen für Absenden & Speichern ---------------- */
 
 // Sammelt alle relevanten Formulardaten in einem Objekt
@@ -1201,7 +1252,7 @@ async function sendDiscordWebhook(formData) {
   // Mannschaft auflisten
   const mannschaftList = Object.values(formData.savedAssignments)
     .flatMap(seats => Object.values(seats))
-    .map(a => `• ${a.displayText} – ${a.role}`)
+    .map(a => `• ${anonymizePersonRef(a.displayText)} – ${a.role || 'Rolle'}`)
     .join('\n') || '–';
 
   const embed = {
@@ -1264,8 +1315,11 @@ async function sendDiscordWebhook(formData) {
         `• Bemerkungen:${formData.bemerkungen          || '–'}`
       ),
 
-      // 7) ganz unten: Wer hat’s erstellt?
-      f('👤 Bericht erstellt durch', formData.berichtErstelltDurch)
+      // 7) Überarbeiteter Einsatzbericht als kompakter Block
+      f('🧾 Einsatzbericht (final)', buildEinsatzberichtText(formData)),
+
+      // 8) ganz unten: Wer hat’s erstellt?
+      f('👤 Bericht erstellt durch', anonymizePersonRef(formData.berichtErstelltDurch, 'Bearbeiter:in'))
     ],
     timestamp: new Date().toISOString()
   };
