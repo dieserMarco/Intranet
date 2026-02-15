@@ -239,7 +239,7 @@ button,
   background: rgba(0, 0, 0, 0.22);
   transition: .2s ease;
 }
-.vehicle-card .vehicle-info { display: grid; gap: 4px; min-width: 0; padding-right: 10px; border-right: 1px solid rgba(255,255,255,0.12); }
+.vehicle-card .vehicle-info { display: grid; align-content: start; gap: 4px; min-width: 0; padding-right: 10px; border-right: 1px solid rgba(255,255,255,0.12); min-height: 100%; }
 .vehicle-card .vehicle-info strong { font-size: 1.03rem; }
 .vehicle-card .vehicle-info small { color: var(--muted); }
 .vehicle-card.selected {
@@ -419,7 +419,7 @@ button,
 .vehicle-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 132px;
-  align-items: start;
+  align-items: stretch;
   gap: 10px;
 }
 .vehicle-actions {
