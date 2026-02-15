@@ -376,57 +376,27 @@ let teamData = [];
 let globalAssigned = [];
 var savedAssignments = {};
 let currentSeatBox = null;
-let vehiclesLoaded = false;
-let teamLoaded = false;
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
-let vehicleSearchTerm = "";
-let showAvailableVehiclesOnly = false;
-let assignmentSearchTerm = "";
 
 document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".step").forEach((stepEl, index) => {
-    stepEl.addEventListener("click", function() {
-      const target = index + 1;
-      if (target <= currentStep) {
-        document.getElementById(`section${currentStep}`)?.classList.remove("active");
-        document.getElementById(`section${target}`)?.classList.add("active");
-        updateProgress(target);
-        currentStep = target;
-      }
-    });
-  });
-
-  const vehicleList = document.getElementById("vehicleList");
-  if (vehicleList) vehicleList.innerHTML = '<div class="toggle-inline">Fahrzeuge werden geladen …</div>';
-
   fetch(vehicleCsvUrl)
     .then(res => res.text())
     .then(text => {
       const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       vehiclesData = parsed.data;
-      vehiclesLoaded = true;
       renderVehicleList();
     })
-    .catch(err => {
-      console.error("Fehler beim Laden der Fahrzeugdaten:", err);
-      const vehicleList = document.getElementById("vehicleList");
-      if (vehicleList) vehicleList.innerHTML = `<div class="toggle-inline">Fahrzeuge konnten nicht geladen werden. Bitte Seite neu laden.</div>`;
-    });
+    .catch(err => console.error("Fehler beim Laden der Fahrzeugdaten:", err));
   
   fetch(teamCsvUrl)
     .then(res => res.text())
     .then(text => {
       const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       teamData = parsed.data.filter(m => m["Aktives Mitglied?"] && m["Aktives Mitglied?"].toLowerCase() === "ja");
-      teamLoaded = true;
     })
-    .catch(err => {
-      console.error("Fehler beim Laden der Teamdaten:", err);
-      teamLoaded = false;
-    });
-
+    .catch(err => console.error("Fehler beim Laden der Teamdaten:", err));
 });
 
 const rolePermissions = {
@@ -476,35 +446,29 @@ function renderVehicleList() {
       category.vehicles.forEach(vehicle => {
         const kennzeichen = vehicle["Kennzeichen"] || "Unbekannt";
         const funkrufname = vehicle["Funkrufname"] || "Ohne Funkrufname";
+        vehicleMapping[kennzeichen] = funkrufname;
+
         const status = vehicle["Status"] ? vehicle["Status"].trim() : "";
         const seats = vehicle["Anzahl-Sitzplätze"] ? parseInt(vehicle["Anzahl-Sitzplätze"]) : 0;
-
-        vehicleMapping[kennzeichen] = funkrufname;
 
         const card = document.createElement("div");
         card.classList.add("vehicle-card");
         card.setAttribute("data-seats", seats);
         card.setAttribute("data-selected", "false");
 
-        let statusLabel = "Unbekannt";
         if (status === "NEB") {
           card.classList.add("disabled");
-          card.classList.add("status-neb");
-          statusLabel = "Nicht einsatzbereit";
+          card.style.borderColor = "red";
         } else if (status === "BEB") {
-          card.classList.add("status-beb");
-          statusLabel = "Bedingt einsatzbereit";
+          card.style.borderColor = "orange";
         } else if (status === "EB") {
-          card.classList.add("status-eb");
-          statusLabel = "Einsatzbereit";
+          card.style.borderColor = "green";
         }
 
         card.innerHTML = `
           <div class="vehicle-info">
-            <strong>${funkrufname}</strong>
+            <strong>${funkrufname}</strong><br>
             <small>${kennzeichen}</small>
-            <span class="vehicle-meta">Sitzplätze: ${seats || 0}</span>
-            <span class="status-pill">${statusLabel}</span>
           </div>
           <button class="select-vehicle-button">Auswählen</button>
         `;
@@ -526,9 +490,7 @@ function renderVehicleList() {
         gridEl.appendChild(card);
       });
 
-      if (gridEl.children.length > 0) {
-        container.appendChild(categoryContainer);
-      }
+      container.appendChild(categoryContainer);
     }
   });
 }
@@ -549,10 +511,6 @@ function toggleVehicleSelection(card) {
 }
 
 function prepareTeamAssignment() {
-  if (!vehiclesLoaded) {
-    alert("Fahrzeuge sind noch nicht vollständig geladen. Bitte kurz warten.");
-    return;
-  }
   const container = document.getElementById("assignmentContainer");
   container.innerHTML = "";
   globalAssigned = [];
@@ -595,7 +553,7 @@ function renderAssignmentAccordions(selectedCards) {
         seat.innerHTML = `<div class="assigned-member">
           <span class="member-name">${assignment.displayText}</span>
           <div class="member-right">
-            <span class="member-role" data-role="${assignment.role}" onclick="editRole(this)">Rolle ändern</span>
+            <span class="member-role" onclick="editRole(this)">${assignment.role}</span>
             <span class="remove-assignment" onclick="removeAssignmentFromButton(event, this)">&times;</span>
           </div>
         </div>`;
@@ -604,21 +562,16 @@ function renderAssignmentAccordions(selectedCards) {
         seat.setAttribute("data-member-id", assignment.memberId);
         updateSeatColor(seat, assignment.role);
       } else {
-        seat.innerHTML = `<button class="assign-btn" onclick="openTeamModal(this)">Sitz ${i + 1} zuweisen</button>`;
+        seat.innerHTML = `<button onclick="openTeamModal(this)">Zuweisen</button>`;
       }
       seatContainer.appendChild(seat);
     }
     container.appendChild(acc);
   });
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
-  filterAssignmentCards();
 }
 
 function openTeamModal(button) {
-  if (!teamLoaded) {
-    alert("Mannschaftsdaten sind noch nicht geladen. Bitte kurz warten.");
-    return;
-  }
   currentSeatBox = button.parentElement;
   document.getElementById("teamModal").classList.add("active");
   document.getElementById("teamSearch").value = "";
@@ -676,7 +629,7 @@ function assignTeamMember(memberId, displayText, role) {
   currentSeatBox.innerHTML = `<div class="assigned-member">
       <span class="member-name">${displayText}</span>
       <div class="member-right">
-        <span class="member-role" data-role="${role}" onclick="editRole(this)">Rolle ändern</span>
+        <span class="member-role" onclick="editRole(this)">${role}</span>
         <span class="remove-assignment" onclick="removeAssignmentFromButton(event, this)">&times;</span>
       </div>
     </div>`;
@@ -702,7 +655,7 @@ function removeAssignment(seat) {
   }
   const index = globalAssigned.indexOf(memberId);
   if (index !== -1) globalAssigned.splice(index, 1);
-  seat.innerHTML = `<button class="assign-btn" onclick="openTeamModal(this)">Sitz ${Number(seatIndex) + 1} zuweisen</button>`;
+  seat.innerHTML = `<button onclick="openTeamModal(this)">Zuweisen</button>`;
   seat.removeAttribute("data-assigned");
   seat.removeAttribute("data-role");
   seat.removeAttribute("data-member-id");
@@ -714,7 +667,7 @@ function removeAssignment(seat) {
 function removeAssignmentFromButton(e, btn) { e.stopPropagation(); const seat = btn.closest('.seat'); removeAssignment(seat); }
 
 function editRole(roleSpan) {
-  const currentRole = roleSpan.dataset.role || roleSpan.textContent;
+  const currentRole = roleSpan.textContent;
   const select = document.createElement("select");
   select.innerHTML = `
     <option value="Einsatzleiter" ${currentRole === "Einsatzleiter" ? "selected" : ""}>Einsatzleiter</option>
@@ -746,8 +699,7 @@ function updateRole(selectElement) {
 
   const newSpan = document.createElement("span");
   newSpan.classList.add("member-role");
-  newSpan.textContent = "Rolle ändern";
-  newSpan.dataset.role = newRole;
+  newSpan.textContent = newRole;
   newSpan.setAttribute("onclick", "editRole(this)");
 
   if (savedAssignments[vehicleKey] && savedAssignments[vehicleKey][seatIndex]) {
@@ -762,18 +714,19 @@ function updateRole(selectElement) {
 
 function updateSeatColor(seat, role) {
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
-  seat.style.backgroundColor = "";
-  seat.style.color = "";
 
   if (role === "Einsatzleiter") {
-    seat.classList.add("role-einsatzleiter");
+    seat.style.backgroundColor = "#f1c40f";  // Gelb
   } else if (role === "Maschinist") {
-    seat.classList.add("role-maschinist");
+    seat.style.backgroundColor = "#B0B0B0";  // Grau
+    seat.style.color = "#000";              // Schwarz
   } else if (role === "Gruppenkommandant") {
-    seat.classList.add("role-gruppenkommandant");
+    seat.style.backgroundColor = "#3498db";  // Blau
   } else {
-    seat.classList.add("role-mannschaft");
+    seat.style.backgroundColor = "#e74c3c";  // Rot
   }
+
+  console.log("Manuelle Farbänderung:", seat.style.backgroundColor);
 }
 
 function sortAssignments(seatContainer) {
@@ -799,130 +752,105 @@ function updateGlobalSlotDisplay(assignmentBox) {
   slotDisplay.textContent = `Sitzplätze: ${assignedCount} / ${total}`;
 }
 
-
 /* ---------------- Übersicht (Step 5) – Zusammenfassung aller Daten ---------------- */
 function updateSummary() {
-  const datum = document.getElementById("datum").value.trim();
-  const uhrzeitAlarmierung = document.getElementById("uhrzeitAlarmierung").value.trim();
-  const einsatzEnde = document.getElementById("einsatzEnde").value.trim();
-  const uhrzeitRueckkehr = document.getElementById("uhrzeitRueckkehr").value.trim();
-  const objekt = document.getElementById("objektSelect").value.trim();
-  const einsatzortBezirk = document.getElementById("einsatzortBezirk").value.trim();
-  const einsatzortStrasse = document.getElementById("einsatzortStrasse").value.trim();
-  const hausnummer = document.getElementById("hausnummer").value.trim();
-  const einsatzortPLZ = document.getElementById("einsatzortPLZ").value.trim();
-  const eigenerEinsatzbereich = document.querySelector("#einsatzbereich-buttons .radio-button.active")?.textContent.trim() || "";
-  const einsatzStichwort = document.getElementById("searchInput").value.trim();
-  const meldung = getChipValues("selected-meldung");
-  const alarmierung = getChipValues("selected-alarmierung");
-  const anwesend = getChipValues("selected-anwesend");
-  const wetter = getChipValues("selected-wetter");
-  const gefahrenklasse = getChipValues("selected-gefahrenklasse");
-  const lageEintreffen = document.getElementById("lageEintreffen").value.trim();
-  const massnahmenEinsatzort = document.getElementById("massnahmenEinsatzort").value.trim();
-  const bemerkungen = document.getElementById("bemerkungen").value.trim();
-
-  const verletztePersonen = document.getElementById("verletztePersonen")?.value.trim() || "0";
-  const getoetetePersonen = document.getElementById("getoetetePersonen")?.value.trim() || "0";
-  const gerettetePersonen = document.getElementById("gerettetePersonen")?.value.trim() || "0";
-  const verletzteFeuerwehr = document.getElementById("verletzteFeuerwehr")?.value.trim() || "0";
-  const getoeteteFeuerwehr = document.getElementById("getoeteteFeuerwehr")?.value.trim() || "0";
-  const geretteteFeuerwehr = document.getElementById("geretteteFeuerwehr")?.value.trim() || "0";
-  const verletzteTiere = document.getElementById("verletzteTiere")?.value.trim() || "0";
-  const getoeteteTiere = document.getElementById("getoeteteTiere")?.value.trim() || "0";
-  const geretteteTiere = document.getElementById("geretteteTiere")?.value.trim() || "0";
-
-  const selectedVehicles = Array.from(document.querySelectorAll(".vehicle-card[data-selected='true']")).map(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
-    return vehicleMapping[kennzeichen] || kennzeichen;
+  let datum = document.getElementById("datum").value.trim();
+  let uhrzeitAlarmierung = document.getElementById("uhrzeitAlarmierung").value.trim();
+  let einsatzEnde = document.getElementById("einsatzEnde").value.trim();
+  let uhrzeitRueckkehr = document.getElementById("uhrzeitRueckkehr").value.trim();
+  let objekt = document.getElementById("objektSelect").value.trim();
+  let einsatzortBezirk = document.getElementById("einsatzortBezirk").value.trim();
+  let einsatzortStrasse = document.getElementById("einsatzortStrasse").value.trim();
+  let hausnummer = document.getElementById("hausnummer").value.trim();
+  let einsatzortPLZ = document.getElementById("einsatzortPLZ").value.trim();
+  let eigenerEinsatzbereich = document.querySelector("#einsatzbereich-buttons .radio-button.active")?.textContent.trim() || "";
+  let einsatzStichwort = document.getElementById("searchInput").value.trim();
+  let meldung = getChipValues("selected-meldung");
+  let alarmierung = getChipValues("selected-alarmierung");
+  let anwesend = getChipValues("selected-anwesend");
+  let wetter = getChipValues("selected-wetter");
+  let gefahrenklasse = getChipValues("selected-gefahrenklasse");
+  let lageEintreffen = document.getElementById("lageEintreffen").value.trim();
+  let massnahmenEinsatzort = document.getElementById("massnahmenEinsatzort").value.trim();
+  let bemerkungen = document.getElementById("bemerkungen").value.trim();
+  let verletztePersonen = document.getElementById("verletztePersonen")?.value.trim() || "";
+  let getoetetePersonen = document.getElementById("getoetetePersonen")?.value.trim() || "";
+  let gerettetePersonen = document.getElementById("gerettetePersonen")?.value.trim() || "";
+  let verletzteFeuerwehr = document.getElementById("verletzteFeuerwehr")?.value.trim() || "";
+  let getoeteteFeuerwehr = document.getElementById("getoeteteFeuerwehr")?.value.trim() || "";
+  let geretteteFeuerwehr = document.getElementById("geretteteFeuerwehr")?.value.trim() || "";
+  let verletzteTiere = document.getElementById("verletzteTiere")?.value.trim() || "";
+  let getoeteteTiere = document.getElementById("getoeteteTiere")?.value.trim() || "";
+  let geretteteTiere = document.getElementById("geretteteTiere")?.value.trim() || "";
+  let vehicleCards = document.querySelectorAll(".vehicle-card[data-selected='true']");
+  let fahrzeugeHtml = "";
+  vehicleCards.forEach(card => {
+    let kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    let fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
+    fahrzeugeHtml += `<div class="overview-item"><span class="label">Fahrzeug:</span><span contenteditable="true" onblur="updateEditable(this, null)">${fahrzeugName}</span></div>`;
   });
-
-  const teamAssignments = [];
+  let teamAssignments = [];
   for (let vehicle in savedAssignments) {
     for (let seat in savedAssignments[vehicle]) {
-      const a = savedAssignments[vehicle][seat];
-      teamAssignments.push({
-        displayText: a.displayText,
-        role: a.role,
-        seat: Number(seat) + 1,
-        vehicle: vehicleMapping[vehicle] || vehicle
-      });
+      let ass = savedAssignments[vehicle][seat];
+      teamAssignments.push({ memberId: ass.memberId, displayText: ass.displayText, role: ass.role, vehicle: vehicleMapping[vehicle] || vehicle });
     }
   }
-
-  const row = (label, value, editableId = null) => {
-    const safeValue = value && value !== "" ? value : "-";
-    if (editableId) {
-      return `<div class="overview-item"><span class="label">${label}</span><span contenteditable="true" onblur="updateEditable(this, '${editableId}')">${safeValue}</span></div>`;
-    }
-    return `<div class="overview-item"><span class="label">${label}</span><span>${safeValue}</span></div>`;
-  };
-
-  let summaryHtml = `<div class="overview-container overview-report">`;
-  summaryHtml += `<div class="report-title">Einsatzbericht – Übersicht</div>`;
-
-  summaryHtml += `<div class="report-grid two-col">`;
+  let uniqueMannschaft = {};
+  teamAssignments.forEach(a => { uniqueMannschaft[a.memberId] = a; });
+  let mannschaftHtml = "";
+  for (let id in uniqueMannschaft) {
+    let a = uniqueMannschaft[id];
+    mannschaftHtml += `<li contenteditable="true" onblur="updateEditable(this, null)">${a.displayText} – ${a.role}</li>`;
+  }
+  if(mannschaftHtml) { mannschaftHtml = "<ul>" + mannschaftHtml + "</ul>"; }
+  let summaryHtml = `<div class="overview-container"><div class="overview-header"></div>`;
   summaryHtml += `<div class="overview-section">
-<h2>Basisdaten</h2>
-${row("Eigener Einsatzbereich", eigenerEinsatzbereich, "einsatzbereich")}
-${row("Einsatzstichwort", einsatzStichwort, "searchInput")}
-${row("Meldung", meldung, "selected-meldung")}
-</div>`;
+      <h2>Grundinformationen</h2>
+      <div class="overview-item"><span class="label">Eigener Einsatzbereich:</span><span contenteditable="true" onblur="updateEditable(this, 'einsatzbereich')">${eigenerEinsatzbereich}</span></div>
+      <div class="overview-item"><span class="label">Einsatzstichwort:</span><span contenteditable="true" onblur="updateEditable(this, 'searchInput')">${einsatzStichwort}</span></div>
+    </div>`;
+  if(meldung) { summaryHtml += `<div class="overview-section"><h2>Meldung</h2><div class="overview-item"><span class="label">Meldung:</span><span contenteditable="true" onblur="updateEditable(this, 'selected-meldung')">${meldung}</span></div></div>`; }
   summaryHtml += `<div class="overview-section">
-<h2>Zeitangaben</h2>
-${row("Alarmierungsdatum", datum, "datum")}
-${row("Alarmierungszeit", uhrzeitAlarmierung, "uhrzeitAlarmierung")}
-${row("Einsatzende Datum", einsatzEnde, "einsatzEnde")}
-${row("Einsatzende Zeit", uhrzeitRueckkehr, "uhrzeitRueckkehr")}
-</div>`;
+      <h2>Einsatzdetails</h2>
+      <div class="overview-item"><span class="label">Datum:</span><span contenteditable="true" onblur="updateEditable(this, 'datum')">${datum}</span></div>
+      <div class="overview-item"><span class="label">Alarmierungszeit:</span><span contenteditable="true" onblur="updateEditable(this, 'uhrzeitAlarmierung')">${uhrzeitAlarmierung}</span></div>
+      <div class="overview-item"><span class="label">Einsatzendedatum:</span><span contenteditable="true" onblur="updateEditable(this, 'einsatzEnde')">${einsatzEnde}</span></div>
+      <div class="overview-item"><span class="label">Einsatzendezeit:</span><span contenteditable="true" onblur="updateEditable(this, 'uhrzeitRueckkehr')">${uhrzeitRueckkehr}</span></div>
+    </div>`;
+  summaryHtml += `<div class="overview-section">
+      <h2>Einsatzort & Objekt</h2>
+      <div class="overview-item"><span class="label">Objekt:</span><span contenteditable="true" onblur="updateEditable(this, 'objektSelect')">${objekt}</span></div>
+      <div class="overview-item"><span class="label">Straße/Hausnr.:</span><span contenteditable="true" onblur="updateEditable(this, 'einsatzortStrasse')">${einsatzortStrasse} ${hausnummer}</span></div>
+      <div class="overview-item"><span class="label">PLZ:</span><span contenteditable="true" onblur="updateEditable(this, 'einsatzortPLZ')">${einsatzortPLZ}</span></div>
+      <div class="overview-item"><span class="label">Bezirk:</span><span contenteditable="true" onblur="updateEditable(this, 'einsatzortBezirk')">${einsatzortBezirk}</span></div>
+    </div>`;
+  summaryHtml += `<div class="overview-section">
+      <h2>Alarmierung & Infos</h2>
+      <div class="overview-item"><span class="label">Alarmierung:</span><span contenteditable="true" onblur="updateEditable(this, 'selected-alarmierung')">${alarmierung}</span></div>
+      <div class="overview-item"><span class="label">Anwesend:</span><span contenteditable="true" onblur="updateEditable(this, 'selected-anwesend')">${anwesend}</span></div>
+      <div class="overview-item"><span class="label">Wetter:</span><span contenteditable="true" onblur="updateEditable(this, 'selected-wetter')">${wetter}</span></div>
+      <div class="overview-item"><span class="label">Gefahrenklasse:</span><span contenteditable="true" onblur="updateEditable(this, 'selected-gefahrenklasse')">${gefahrenklasse}</span></div>
+    </div>`;
+  if(fahrzeugeHtml) { summaryHtml += `<div class="overview-section"><h2>Fahrzeuge</h2>${fahrzeugeHtml}</div>`; }
+  if(mannschaftHtml) { summaryHtml += `<div class="overview-section"><h2>Mannschaft</h2>${mannschaftHtml}</div>`; }
+  let injuredHtml = "";
+  if (verletztePersonen || getoetetePersonen || gerettetePersonen) {
+    injuredHtml += `<div class="overview-item"><span class="label">Personen:</span><span>Verletzt: ${verletztePersonen || '-'}, Getötet: ${getoetetePersonen || '-'}, Gerettet: ${gerettetePersonen || '-'}</span></div>`;
+  }
+  if (verletzteFeuerwehr || getoeteteFeuerwehr || geretteteFeuerwehr) {
+    injuredHtml += `<div class="overview-item"><span class="label">Feuerwehr:</span><span>Verletzt: ${verletzteFeuerwehr || '-'}, Getötet: ${getoeteteFeuerwehr || '-'}, Gerettet: ${geretteteFeuerwehr || '-'}</span></div>`;
+  }
+  if (verletzteTiere || getoeteteTiere || geretteteTiere) {
+    injuredHtml += `<div class="overview-item"><span class="label">Tiere:</span><span>Verletzt: ${verletzteTiere || '-'}, Getötet: ${getoeteteTiere || '-'}, Gerettet: ${geretteteTiere || '-'}</span></div>`;
+  }
+  if(injuredHtml) { summaryHtml += `<div class="overview-section"><h2>Verletzte</h2>${injuredHtml}</div>`; }
+  let notizenHtml = "";
+  if(lageEintreffen) { notizenHtml += `<div class="overview-item"><span class="label">Lage beim Eintreffen:</span><span contenteditable="true" onblur="updateEditable(this, 'lageEintreffen')">${lageEintreffen}</span></div>`; }
+  if(massnahmenEinsatzort) { notizenHtml += `<div class="overview-item"><span class="label">Maßnahmen:</span><span contenteditable="true" onblur="updateEditable(this, 'massnahmenEinsatzort')">${massnahmenEinsatzort}</span></div>`; }
+  if(bemerkungen) { notizenHtml += `<div class="overview-item"><span class="label">Bemerkungen:</span><span contenteditable="true" onblur="updateEditable(this, 'bemerkungen')">${bemerkungen}</span></div>`; }
+  if(notizenHtml) { summaryHtml += `<div class="overview-section"><h2>Einsatznotizen</h2>${notizenHtml}</div>`; }
   summaryHtml += `</div>`;
-
-  summaryHtml += `<div class="report-grid two-col">`;
-  summaryHtml += `<div class="overview-section">
-<h2>Einsatzort</h2>
-${row("Objekt", objekt, "objektSelect")}
-${row("Straße/Hausnr.", `${einsatzortStrasse} ${hausnummer}`.trim(), "einsatzortStrasse")}
-${row("PLZ", einsatzortPLZ, "einsatzortPLZ")}
-${row("Bezirk", einsatzortBezirk, "einsatzortBezirk")}
-</div>`;
-  summaryHtml += `<div class="overview-section">
-<h2>Alarmierung & Lageinfos</h2>
-${row("Alarmierung", alarmierung, "selected-alarmierung")}
-${row("Anwesend", anwesend, "selected-anwesend")}
-${row("Wetter", wetter, "selected-wetter")}
-${row("Gefahrenklasse", gefahrenklasse, "selected-gefahrenklasse")}
-</div>`;
-  summaryHtml += `</div>`;
-
-  summaryHtml += `<div class="report-grid two-col">`;
-  const vehiclesHtml = selectedVehicles.length
-    ? selectedVehicles.map(v => `<div class="report-chip">${v}</div>`).join("")
-    : `<div class="report-chip">-</div>`;
-  summaryHtml += `<div class="overview-section"><h2>Fahrzeuge</h2><div class="report-chip-wrap">${vehiclesHtml}</div></div>`;
-
-  const teamHtml = teamAssignments.length
-    ? teamAssignments.map(a => `<div class="crew-row"><strong>${a.displayText}</strong><span>${a.role}</span><span>${a.vehicle} / Sitz ${a.seat}</span></div>`).join("")
-    : `<div class="crew-row"><strong>-</strong></div>`;
-  summaryHtml += `<div class="overview-section"><h2>Mannschaft</h2><div class="crew-list">${teamHtml}</div></div>`;
-  summaryHtml += `</div>`;
-
-  summaryHtml += `<div class="overview-section">
-<h2>Verletzte / Betroffene</h2>
-<div class="report-grid three-col">
-<div class="stat-card"><h3>Personen</h3><p>Verletzt: ${verletztePersonen}</p><p>Getötet: ${getoetetePersonen}</p><p>Gerettet: ${gerettetePersonen}</p></div>
-<div class="stat-card"><h3>Feuerwehr</h3><p>Verletzt: ${verletzteFeuerwehr}</p><p>Getötet: ${getoeteteFeuerwehr}</p><p>Gerettet: ${geretteteFeuerwehr}</p></div>
-<div class="stat-card"><h3>Tiere</h3><p>Verletzt: ${verletzteTiere}</p><p>Getötet: ${getoeteteTiere}</p><p>Gerettet: ${geretteteTiere}</p></div>
-</div>
-</div>`;
-
-  summaryHtml += `<div class="overview-section">
-<h2>Einsatznotizen</h2>
-${row("Lage beim Eintreffen", lageEintreffen, "lageEintreffen")}
-${row("Maßnahmen", massnahmenEinsatzort, "massnahmenEinsatzort")}
-${row("Bemerkungen", bemerkungen, "bemerkungen")}
-</div>`;
-  summaryHtml += `</div>`;
-
   document.getElementById("summaryContainer").innerHTML = summaryHtml;
 }
 
