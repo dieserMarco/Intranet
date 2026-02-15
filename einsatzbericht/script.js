@@ -312,6 +312,12 @@ function prevSection(step) {
   }
 }
 
+function skipTeamAssignment() {
+  if (!confirm('Ohne Mannschafts-Zuteilung zur Übersicht wechseln?')) return;
+  nextSection(4);
+}
+
+
 function updateProgress(step) {
   document.querySelectorAll(".step").forEach((el, index) => {
     if (index+1 === step) {
@@ -456,19 +462,16 @@ function renderVehicleList() {
         card.setAttribute("data-seats", seats);
         card.setAttribute("data-selected", "false");
 
+        card.classList.add(`status-${(status || 'UNK').toLowerCase()}`);
         if (status === "NEB") {
           card.classList.add("disabled");
-          card.style.borderColor = "red";
-        } else if (status === "BEB") {
-          card.style.borderColor = "orange";
-        } else if (status === "EB") {
-          card.style.borderColor = "green";
         }
 
         card.innerHTML = `
           <div class="vehicle-info">
             <strong>${funkrufname}</strong><br>
             <small>${kennzeichen}</small>
+            <span class="status-badge">${status || 'UNK'}</span>
           </div>
           <button class="select-vehicle-button">Auswählen</button>
         `;
@@ -714,19 +717,10 @@ function updateRole(selectElement) {
 
 function updateSeatColor(seat, role) {
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
-
-  if (role === "Einsatzleiter") {
-    seat.style.backgroundColor = "#f1c40f";  // Gelb
-  } else if (role === "Maschinist") {
-    seat.style.backgroundColor = "#B0B0B0";  // Grau
-    seat.style.color = "#000";              // Schwarz
-  } else if (role === "Gruppenkommandant") {
-    seat.style.backgroundColor = "#3498db";  // Blau
-  } else {
-    seat.style.backgroundColor = "#e74c3c";  // Rot
-  }
-
-  console.log("Manuelle Farbänderung:", seat.style.backgroundColor);
+  seat.style.backgroundColor = "";
+  seat.style.color = "";
+  if (!role) return;
+  seat.classList.add("role-" + role.toLowerCase());
 }
 
 function sortAssignments(seatContainer) {
