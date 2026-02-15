@@ -484,7 +484,6 @@ function renderVehicleList() {
           <div class="vehicle-head">
             <div class="vehicle-info">
               <strong>${funkrufname}</strong>
-              <small>Sitzplätze: ${Number.isFinite(seats) ? seats : 0}</small>
             </div>
             <div class="vehicle-actions">
               <button type="button" class="vehicle-plate-btn" disabled>${kennzeichen}</button>
