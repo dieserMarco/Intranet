@@ -386,3 +386,93 @@ button,
 .selected-wrapper { position: relative; }
 .selected-options { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
 .popout-group label { margin-bottom: 6px; display:block; }
+
+
+/* --- Verletzte: ruhiger als Ja/Nein-Buttons --- */
+.injury-block {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.14);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.injury-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.injury-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.additional-fields {
+  padding-top: 6px;
+}
+
+/* --- Fahrzeuge übersichtlicher --- */
+.vehicle-category-container {
+  padding: 14px;
+  background: rgba(255,255,255,0.04);
+}
+.vehicle-category-title {
+  margin: 0 0 10px;
+  font-size: 1.04rem;
+  color: rgba(255, 201, 201, 0.95);
+}
+.vehicle-card {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 8px;
+}
+.select-vehicle-button {
+  width: fit-content;
+}
+
+/* --- Mannschaft Step klarer --- */
+#assignmentContainer {
+  display: grid;
+  gap: 12px;
+}
+.vehicle-assignment {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.vehicle-assignment h2 {
+  margin-bottom: 6px;
+}
+.seat-container {
+  display: grid;
+  gap: 8px;
+}
+.assigned-member {
+  background: rgba(0,0,0,0.2);
+}
+.member-role {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .82rem;
+}
+.remove-assignment {
+  margin-left: 8px;
+  opacity: .85;
+}
+
+/* --- Gesamtübersicht ruhiger/lesbarer --- */
+#summaryContainer .overview-container {
+  background: rgba(255,255,255,0.03);
+}
+#summaryContainer .overview-section {
+  background: rgba(0,0,0,0.14);
+  border-color: rgba(255,255,255,0.08);
+}
+#summaryContainer .overview-item {
+  align-items: flex-start;
+}
+#summaryContainer .overview-item span:last-child {
+  text-align: right;
+  max-width: 62%;
+}

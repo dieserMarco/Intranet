@@ -343,77 +343,72 @@
     <!-- Gruppe 3: Verletzte -->
     <fieldset class="group-box">
       <legend>Verletzte</legend>
-      <!-- Verletzte Personen -->
-      <div class="form-group">
-        <label>Verletzte Personen:</label>
-        <div class="radio-buttons single-select" id="verletztePersonen-buttons">
-          <button type="button" class="radio-button" onclick="toggleVerletzte('personen', true, this)">Ja</button>
-          <button type="button" class="radio-button active" onclick="toggleVerletzte('personen', false, this)">Nein</button>
-        </div>
-      </div>
-<!-- Container, der nur angezeigt wird, wenn „Ja“ geklickt wurde -->
-<div class="additional-fields" id="additional-personen" style="display:none;">
-    <div class="horizontal-group">
-      <div class="form-group">
-        <label>Anzahl Verletzte Personen:</label>
-        <input type="number" id="verletztePersonen" min="0">
-      </div>
-      <div class="form-group">
-        <label>Anzahl Getötete Personen:</label>
-        <input type="number" id="getoetetePersonen" min="0">
-      </div>
-      <div class="form-group">
-        <label>Anzahl Gerettete Personen:</label>
-        <input type="number" id="gerettetePersonen" min="0">
-      </div>
-    </div>
-  </div>
-  
-      <!-- Verletzte Feuerwehrmitglieder -->
-      <div class="form-group">
-        <label>Verletzte Feuerwehrmitglieder:</label>
-        <div class="radio-buttons single-select" id="verletzteFeuerwehr-buttons">
-          <button type="button" class="radio-button" onclick="toggleVerletzte('feuerwehr', true, this)">Ja</button>
-          <button type="button" class="radio-button active" onclick="toggleVerletzte('feuerwehr', false, this)">Nein</button>
-        </div>
-      </div>
-      <div class="additional-fields" id="additional-feuerwehr" style="display:none;">
-        <div class="horizontal-group">
-          <div class="form-group">
-            <label>Anzahl Verletzte Feuerwehrmitglieder:</label>
-            <input type="number" id="verletzteFeuerwehr" min="0">
-          </div>
-          <div class="form-group">
-            <label>Anzahl Getötete Feuerwehrmitglieder:</label>
-            <input type="number" id="getoeteteFeuerwehr" min="0">
-          </div>
-          <div class="form-group">
-            <label>Anzahl Gerettete Feuerwehrmitglieder:</label>
-            <input type="number" id="geretteteFeuerwehr" min="0">
+
+      <div class="injury-block">
+        <label class="injury-toggle">
+          <input type="checkbox" id="injuryToggle-personen" onchange="toggleInjuryCategory('personen', this.checked)">
+          <span>Angaben zu Personen erfassen</span>
+        </label>
+        <div class="additional-fields" id="additional-personen" style="display:none;">
+          <div class="horizontal-group">
+            <div class="form-group">
+              <label>Anzahl Verletzte Personen:</label>
+              <input type="number" id="verletztePersonen" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Getötete Personen:</label>
+              <input type="number" id="getoetetePersonen" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Gerettete Personen:</label>
+              <input type="number" id="gerettetePersonen" min="0">
+            </div>
           </div>
         </div>
       </div>
-      <!-- Verletzte Tiere -->
-      <div class="form-group">
-        <label>Verletzte Tiere:</label>
-        <div class="radio-buttons single-select" id="verletzteTiere-buttons">
-          <button type="button" class="radio-button" onclick="toggleVerletzte('tiere', true, this)">Ja</button>
-          <button type="button" class="radio-button active" onclick="toggleVerletzte('tiere', false, this)">Nein</button>
+
+      <div class="injury-block">
+        <label class="injury-toggle">
+          <input type="checkbox" id="injuryToggle-feuerwehr" onchange="toggleInjuryCategory('feuerwehr', this.checked)">
+          <span>Angaben zu Feuerwehrmitgliedern erfassen</span>
+        </label>
+        <div class="additional-fields" id="additional-feuerwehr" style="display:none;">
+          <div class="horizontal-group">
+            <div class="form-group">
+              <label>Anzahl Verletzte Feuerwehrmitglieder:</label>
+              <input type="number" id="verletzteFeuerwehr" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Getötete Feuerwehrmitglieder:</label>
+              <input type="number" id="getoeteteFeuerwehr" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Gerettete Feuerwehrmitglieder:</label>
+              <input type="number" id="geretteteFeuerwehr" min="0">
+            </div>
+          </div>
         </div>
       </div>
-      <div class="additional-fields" id="additional-tiere" style="display:none;">
-        <div class="horizontal-group">
-          <div class="form-group">
-            <label>Anzahl Verletzte Tiere:</label>
-            <input type="number" id="verletzteTiere" min="0">
-          </div>
-          <div class="form-group">
-            <label>Anzahl Getötete Tiere:</label>
-            <input type="number" id="getoeteteTiere" min="0">
-          </div>
-          <div class="form-group">
-            <label>Anzahl Gerettete Tiere:</label>
-            <input type="number" id="geretteteTiere" min="0">
+
+      <div class="injury-block">
+        <label class="injury-toggle">
+          <input type="checkbox" id="injuryToggle-tiere" onchange="toggleInjuryCategory('tiere', this.checked)">
+          <span>Angaben zu Tieren erfassen</span>
+        </label>
+        <div class="additional-fields" id="additional-tiere" style="display:none;">
+          <div class="horizontal-group">
+            <div class="form-group">
+              <label>Anzahl Verletzte Tiere:</label>
+              <input type="number" id="verletzteTiere" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Getötete Tiere:</label>
+              <input type="number" id="getoeteteTiere" min="0">
+            </div>
+            <div class="form-group">
+              <label>Anzahl Gerettete Tiere:</label>
+              <input type="number" id="geretteteTiere" min="0">
+            </div>
           </div>
         </div>
       </div>

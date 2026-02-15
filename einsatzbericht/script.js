@@ -228,6 +228,15 @@ document.getElementById("objektSelect").addEventListener("blur", () => {
 });
 window.addEventListener("load", async () => { await loadObjekteData(); });
 
+function initInjuryToggles() {
+  ['personen', 'feuerwehr', 'tiere'].forEach(category => {
+    const checkbox = document.getElementById(`injuryToggle-${category}`);
+    if (!checkbox) return;
+    toggleInjuryCategory(category, checkbox.checked);
+  });
+}
+
+
 /* ---------------- Gemeinsame Funktion für Radio-Buttons ---------------- */
 function toggleButton(button, group) {
   const buttonGroup = document.getElementById(`${group}-buttons`).querySelectorAll('.radio-button');
@@ -356,21 +365,22 @@ function saveSelection(type) {
 }
 
 /* ---------------- Funktionen für Verletzte (Step 2) ---------------- */
-function toggleVerletzte(category, isYes, btn) {
-  let containerId = "additional-" + category;
-  let container = document.getElementById(containerId);
-  container.style.display = isYes ? "block" : "none";
-  let groupId;
-  if (category === "personen") {
-    groupId = "verletztePersonen-buttons";
-  } else if (category === "feuerwehr") {
-    groupId = "verletzteFeuerwehr-buttons";
-  } else if (category === "tiere") {
-    groupId = "verletzteTiere-buttons";
+function toggleInjuryCategory(category, isActive) {
+  const container = document.getElementById(`additional-${category}`);
+  if (!container) return;
+
+  container.style.display = isActive ? 'block' : 'none';
+
+  if (!isActive) {
+    container.querySelectorAll('input[type="number"]').forEach(input => {
+      input.value = '';
+    });
   }
-  let buttons = document.getElementById(groupId).querySelectorAll('.radio-button');
-  buttons.forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+}
+
+// Rückwärtskompatibel, falls noch alte Aufrufe existieren
+function toggleVerletzte(category, isYes) {
+  toggleInjuryCategory(category, isYes);
 }
 
 /* ---------------- Fahrzeug- & Mannschaftszuweisung ---------------- */
@@ -1333,6 +1343,7 @@ async function sendDiscordWebhook(formData) {
 // ---------------- Initiale Sichtbarkeit beim Laden sicherstellen ----------------
 window.addEventListener('load', () => {
   updateRgVisibility();
+  initInjuryToggles();
 });
 
 // Nur Datum setzen (yyyy-mm-dd) – für <input type="date">
