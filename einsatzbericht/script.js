@@ -484,15 +484,14 @@ function renderVehicleList() {
           <div class="vehicle-head">
             <div class="vehicle-info">
               <strong>${funkrufname}</strong>
-              <small>${kennzeichen}</small>
+              <small>Sitzplätze: ${Number.isFinite(seats) ? seats : 0}</small>
             </div>
             <div class="vehicle-actions">
               <button type="button" class="vehicle-plate-btn" disabled>${kennzeichen}</button>
               <button type="button" class="vehicle-status-btn">Aktualisieren</button>
-              <span class="status-badge"></span>
+              <button type="button" class="select-vehicle-button">Auswählen</button>
             </div>
           </div>
-          <button class="select-vehicle-button">Auswählen</button>
         `;
 
         setVehicleStatus(card, status);
@@ -534,9 +533,10 @@ function setVehicleStatus(card, status) {
   card.classList.add(`status-${normalized.toLowerCase()}`);
   card.setAttribute('data-status', normalized);
 
-  const statusBadge = card.querySelector('.status-badge');
-  if (statusBadge) {
-    statusBadge.textContent = `${normalized} • ${VEHICLE_STATUS_LABELS[normalized]}`;
+  const statusButton = card.querySelector('.vehicle-status-btn');
+  if (statusButton) {
+    statusButton.textContent = `Aktualisieren · ${normalized}`;
+    statusButton.title = VEHICLE_STATUS_LABELS[normalized];
   }
 
   if (normalized === 'NEB') {
@@ -579,7 +579,7 @@ function prepareTeamAssignment() {
     return;
   }
   selectedCards.forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     if (savedAssignments[kennzeichen]) {
       Object.values(savedAssignments[kennzeichen]).forEach(assignment => {
         globalAssigned.push(assignment.memberId);
@@ -593,7 +593,7 @@ function prepareTeamAssignment() {
 function renderAssignmentAccordions(selectedCards) {
   const container = document.getElementById("assignmentContainer");
   selectedCards.forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     const funkrufname = card.querySelector(".vehicle-info strong").innerText;
     const seats = parseInt(card.getAttribute("data-seats"));
     const acc = document.createElement("div");
@@ -835,7 +835,7 @@ function updateSummary() {
   let vehicleCards = document.querySelectorAll(".vehicle-card[data-selected='true']");
   let fahrzeugeHtml = "";
   vehicleCards.forEach(card => {
-    let kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    let kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     let fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
     fahrzeugeHtml += `<div class="overview-item"><span class="label">Fahrzeug:</span><span contenteditable="true" onblur="updateEditable(this, null)">${fahrzeugName}</span></div>`;
   });
@@ -996,7 +996,7 @@ function gatherFormData() {
   // Hier werden die ausgewählten Fahrzeuge gesammelt
   const selectedVehicles = [];
   document.querySelectorAll(".vehicle-card[data-selected='true']").forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     const fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
     selectedVehicles.push({ kennzeichen, fahrzeugName });
   });
@@ -1051,7 +1051,7 @@ function gatherFormData() {
 
     // Fahrzeuge (Step 3)
     fahrzeuge: Array.from(document.querySelectorAll(".vehicle-card[data-selected='true']")).map(card => {
-      const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+      const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
       const fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
       return { kennzeichen, fahrzeugName };
     }),
