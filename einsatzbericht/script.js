@@ -396,6 +396,13 @@ let currentSeatBox = null;
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
 
+const VEHICLE_STATUS_SEQUENCE = ['EB', 'BEB', 'NEB'];
+const VEHICLE_STATUS_LABELS = {
+  EB: 'Einsatzbereit',
+  BEB: 'Bedingt einsatzbereit',
+  NEB: 'Nicht einsatzbereit'
+};
+
 document.addEventListener("DOMContentLoaded", function() {
   fetch(vehicleCsvUrl)
     .then(res => res.text())
@@ -464,38 +471,51 @@ function renderVehicleList() {
         const funkrufname = vehicle["Funkrufname"] || "Ohne Funkrufname";
         vehicleMapping[kennzeichen] = funkrufname;
 
-        const status = vehicle["Status"] ? vehicle["Status"].trim() : "";
+        const status = vehicle["Status"] ? vehicle["Status"].trim().toUpperCase() : "EB";
         const seats = vehicle["Anzahl-Sitzplätze"] ? parseInt(vehicle["Anzahl-Sitzplätze"]) : 0;
 
         const card = document.createElement("div");
         card.classList.add("vehicle-card");
         card.setAttribute("data-seats", seats);
         card.setAttribute("data-selected", "false");
-
-        card.classList.add(`status-${(status || 'UNK').toLowerCase()}`);
-        if (status === "NEB") {
-          card.classList.add("disabled");
-        }
+        card.setAttribute("data-kennzeichen", kennzeichen);
 
         card.innerHTML = `
-          <div class="vehicle-info">
-            <strong>${funkrufname}</strong><br>
-            <small>${kennzeichen}</small>
-            <span class="status-badge">${status || 'UNK'}</span>
+          <div class="vehicle-head">
+            <div class="vehicle-info">
+              <strong>${funkrufname}</strong>
+              <small>${kennzeichen}</small>
+            </div>
+            <div class="vehicle-actions">
+              <button type="button" class="vehicle-plate-btn" disabled>${kennzeichen}</button>
+              <button type="button" class="vehicle-status-btn">Aktualisieren</button>
+              <span class="status-badge"></span>
+            </div>
           </div>
           <button class="select-vehicle-button">Auswählen</button>
         `;
 
-        const btn = card.querySelector(".select-vehicle-button");
-        btn.addEventListener("click", function(e) {
+        setVehicleStatus(card, status);
+
+        const selectBtn = card.querySelector(".select-vehicle-button");
+        selectBtn.addEventListener("click", function(e) {
           e.stopPropagation();
           if (!card.classList.contains("disabled")) {
             toggleVehicleSelection(card);
           }
         });
 
+        const statusBtn = card.querySelector(".vehicle-status-btn");
+        statusBtn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          cycleVehicleStatus(card);
+        });
+
         card.addEventListener("click", function(e) {
-          if (!e.target.classList.contains("select-vehicle-button") && !card.classList.contains("disabled")) {
+          if (e.target.closest(".vehicle-status-btn") || e.target.closest(".vehicle-plate-btn") || e.target.closest(".select-vehicle-button")) {
+            return;
+          }
+          if (!card.classList.contains("disabled")) {
             toggleVehicleSelection(card);
           }
         });
@@ -508,9 +528,35 @@ function renderVehicleList() {
   });
 }
 
+function setVehicleStatus(card, status) {
+  const normalized = VEHICLE_STATUS_SEQUENCE.includes(status) ? status : 'EB';
+  card.classList.remove('status-eb', 'status-beb', 'status-neb', 'disabled');
+  card.classList.add(`status-${normalized.toLowerCase()}`);
+  card.setAttribute('data-status', normalized);
+
+  const statusBadge = card.querySelector('.status-badge');
+  if (statusBadge) {
+    statusBadge.textContent = `${normalized} • ${VEHICLE_STATUS_LABELS[normalized]}`;
+  }
+
+  if (normalized === 'NEB') {
+    card.classList.add('disabled');
+    if (card.getAttribute('data-selected') === 'true') {
+      toggleVehicleSelection(card);
+    }
+  }
+}
+
+function cycleVehicleStatus(card) {
+  const current = card.getAttribute('data-status') || 'EB';
+  const currentIndex = VEHICLE_STATUS_SEQUENCE.indexOf(current);
+  const nextStatus = VEHICLE_STATUS_SEQUENCE[(currentIndex + 1) % VEHICLE_STATUS_SEQUENCE.length];
+  setVehicleStatus(card, nextStatus);
+}
+
 function toggleVehicleSelection(card) {
   const isSelected = card.getAttribute("data-selected") === "true";
-  const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+  const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-info small")?.innerText || "";
   if (isSelected) {
     card.setAttribute("data-selected", "false");
     card.classList.remove("selected");
