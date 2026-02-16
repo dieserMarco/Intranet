@@ -431,7 +431,14 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
-    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block">
+    <div class="team-mode-row">
+      <label class="unassigned-toggle-inline">
+        <input type="checkbox" id="toggleUnassignedMode" onchange="toggleUnassignedMode(this.checked)">
+        <span>Mannschaft ohne Fahrzeugzuweisung</span>
+      </label>
+    </div>
+
+    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block" style="display:none;">
       <h2>Mannschaft ohne Fahrzeugzuweisung</h2>
       <div class="slot-display" id="unassignedCount">Mitglieder: 0</div>
       <div id="unassignedTeamList" class="seat-container"></div>
@@ -441,11 +448,10 @@
     <div id="assignmentContainer"></div>
     <div class="button-container team-actions">
       <button type="button" class="zurueck-button" onclick="prevSection(4)">Zurück</button>
-      <button type="button" class="skip-button" onclick="skipTeamAssignment()">Ohne Zuteilung weiter</button>
       <button type="button" class="weiter-button" onclick="nextSection(4)">Weiter</button>
     </div>
   </div>
-  
+
   <!-- Step 5: Übersicht -->
   <div class="container" id="section5">
     <div id="summaryContainer"></div>

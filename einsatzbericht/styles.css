@@ -516,3 +516,22 @@ button,
 .unassigned-team-block { margin-bottom: 12px; }
 .unassigned-team-block .seat-container { margin-bottom: 10px; }
 .unassigned-team-block .primary { width: 100%; }
+
+
+.team-mode-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+.unassigned-toggle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.unassigned-toggle-inline input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}

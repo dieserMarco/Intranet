@@ -321,9 +321,11 @@ function prevSection(step) {
   }
 }
 
-function skipTeamAssignment() {
-  if (!confirm('Ohne Fahrzeug-Zuteilung zur Übersicht wechseln? Bereits gewählte Mannschaft ohne Fahrzeug bleibt erhalten.')) return;
-  nextSection(4);
+function toggleUnassignedMode(isEnabled) {
+  const unassignedBlock = document.getElementById('unassignedTeamBlock');
+  const assignmentContainer = document.getElementById('assignmentContainer');
+  if (unassignedBlock) unassignedBlock.style.display = isEnabled ? 'block' : 'none';
+  if (assignmentContainer) assignmentContainer.style.display = isEnabled ? 'none' : 'block';
 }
 
 
@@ -584,6 +586,8 @@ function prepareTeamAssignment() {
   }
   renderUnassignedTeamList();
   renderAssignmentAccordions(selectedCards);
+  const toggle = document.getElementById('toggleUnassignedMode');
+  toggleUnassignedMode(!!toggle?.checked);
   nextSection(3);
 }
 
@@ -628,6 +632,11 @@ function renderAssignmentAccordions(selectedCards) {
 }
 
 function openUnassignedTeamModal() {
+  const toggle = document.getElementById('toggleUnassignedMode');
+  if (toggle && !toggle.checked) {
+    toggle.checked = true;
+    toggleUnassignedMode(true);
+  }
   teamModalMode = 'unassigned';
   currentSeatBox = null;
   document.getElementById("teamModal").classList.add("active");
@@ -1445,6 +1454,8 @@ async function sendDiscordWebhook(formData) {
 window.addEventListener('load', () => {
   updateRgVisibility();
   initInjuryToggles();
+  const toggle = document.getElementById('toggleUnassignedMode');
+  toggleUnassignedMode(!!toggle?.checked);
 });
 
 // Nur Datum setzen (yyyy-mm-dd) – für <input type="date">
