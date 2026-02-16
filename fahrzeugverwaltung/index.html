@@ -3,10 +3,162 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Minimal</title>
+    <title>Feuerwehr Fahrzeugverwaltung</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
-  <body>
-    <h1>Hi</h1>
+  <body class="fleet-page glass-theme">
+    <div class="app-frame">
+      <aside class="side-nav glass-card">
+        <h1>Feuerwehr</h1>
+        <p class="muted">Fahrzeugverwaltung</p>
+
+        <div class="quick-stats">
+          <article class="glass-soft">
+            <span>Gesamt</span>
+            <strong id="statTotal">0</strong>
+          </article>
+          <article class="glass-soft">
+            <span>Einsatzbereit</span>
+            <strong id="statReady">0</strong>
+          </article>
+          <article class="glass-soft">
+            <span>Prüfung fällig (&lt;30T)</span>
+            <strong id="statServiceDue">0</strong>
+          </article>
+        </div>
+
+        <div class="actions">
+          <button id="newVehicleBtn" class="primary">+ Neues Fahrzeug</button>
+          <button id="exportBtn">Export JSON</button>
+          <label class="import-btn" for="importInput">Import JSON</label>
+          <input id="importInput" type="file" accept="application/json" />
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar glass-card">
+          <div>
+            <h2>Fahrzeugregister</h2>
+            <p class="muted">Übersicht, Filter und schnelle Auswahl mit glasigem Feuerwehr-Design.</p>
+          </div>
+          <div class="filters">
+            <label>
+              Suche
+              <input id="searchInput" type="search" placeholder="Bezeichnung, Funkrufname, Kennzeichen" />
+            </label>
+            <label>
+              Status
+              <select id="statusFilter">
+                <option value="alle">Alle</option>
+                <option value="einsatzbereit">Einsatzbereit</option>
+                <option value="eingeschränkt">Eingeschränkt</option>
+                <option value="nicht einsatzbereit">Nicht einsatzbereit</option>
+              </select>
+            </label>
+          </div>
+        </header>
+
+        <section class="register-panel glass-card">
+          <table class="vehicle-table">
+            <thead>
+              <tr>
+                <th>Kategorie</th>
+                <th>Fahrzeugbezeichnung</th>
+                <th>Taktische Bezeichnung</th>
+                <th>Funkrufname</th>
+                <th>Kennzeichen</th>
+                <th>km</th>
+                <th>Status</th>
+                <th>Nächste Überprüfung</th>
+              </tr>
+            </thead>
+            <tbody id="vehicleTableBody"></tbody>
+          </table>
+        </section>
+
+        <section class="detail-panel glass-card">
+          <header class="detail-head">
+            <div>
+              <h3 id="detailTitle">Kein Fahrzeug ausgewählt</h3>
+              <p id="detailSubtitle" class="muted">Bitte links ein Fahrzeug auswählen oder neu anlegen.</p>
+            </div>
+            <span id="statusBadge" class="status-badge">–</span>
+          </header>
+
+          <nav class="tabs" id="tabs">
+            <button type="button" class="tab-btn active" data-tab="stammdaten">Stammdaten</button>
+            <button type="button" class="tab-btn" data-tab="technik">Technik & Prüfung</button>
+            <button type="button" class="tab-btn" data-tab="beladung">Beladung</button>
+            <button type="button" class="tab-btn" data-tab="schaeden">Schäden/Reparaturen</button>
+            <button type="button" class="tab-btn" data-tab="medien">Fahrzeugbild</button>
+          </nav>
+
+          <form id="vehicleForm" autocomplete="off">
+            <section class="tab-panel active" data-panel="stammdaten">
+              <div class="grid cols-3">
+                <label>Kategorie<input name="category" placeholder="z.B. Löschfahrzeug" /></label>
+                <label>Fahrzeugbezeichnung<input name="designation" required placeholder="z.B. RLF-A 2000" /></label>
+                <label>Taktische Bezeichnung<input name="tacticalName" placeholder="z.B. RLF 1" /></label>
+                <label>Funkrufname<input name="radioName" placeholder="z.B. Tank 1" /></label>
+                <label>Type<input name="type" placeholder="z.B. RLFA" /></label>
+                <label>FZG-Type<input name="fzgType" placeholder="z.B. Allrad" /></label>
+                <label>Anzahl-Sitzplätze<input name="seats" type="number" min="0" step="1" placeholder="9" /></label>
+                <label>Kennzeichen<input name="plate" placeholder="FF-123AB" /></label>
+                <label>
+                  Status
+                  <select name="status">
+                    <option value="einsatzbereit">Einsatzbereit</option>
+                    <option value="eingeschränkt">Eingeschränkt</option>
+                    <option value="nicht einsatzbereit">Nicht einsatzbereit</option>
+                  </select>
+                </label>
+                <label class="span-3">Daten-Allgemein<textarea name="generalData" rows="4" placeholder="Allgemeine Infos zum Fahrzeug"></textarea></label>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="technik">
+              <div class="grid cols-3">
+                <label>Fahrgestell<input name="chassis" placeholder="Hersteller/Modell Fahrgestell" /></label>
+                <label>Aufbau<input name="body" placeholder="z.B. Rosenbauer" /></label>
+                <label>km<input name="mileage" type="number" min="0" step="1" placeholder="0" /></label>
+                <label>Letzte Überprüfung<input name="pickerlLast" type="date" /></label>
+                <label>Nächste Überprüfung<input name="pickerlNext" type="date" /></label>
+                <label>Letzter Service<input name="serviceLast" type="date" /></label>
+                <label>Nächster Service<input name="serviceNext" type="date" /></label>
+                <label class="span-3">Notizen Prüfung/Wartung<textarea name="inspectionNotes" rows="4"></textarea></label>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="beladung">
+              <div class="grid cols-2">
+                <label class="span-2">Beladung<textarea name="loading" rows="6" placeholder="Atemschutz, Schläuche, Werkzeug, ..."></textarea></label>
+                <label>Letzte Beladungskontrolle<input name="loadingCheck" type="date" /></label>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="schaeden">
+              <div class="grid cols-2">
+                <label class="span-2">Gemeldete Schäden<textarea name="damages" rows="5"></textarea></label>
+                <label class="span-2">Durchgeführte Reparaturen<textarea name="repairs" rows="5"></textarea></label>
+                <label class="span-2">Weitere Bemerkungen<textarea name="notes" rows="4"></textarea></label>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="medien">
+              <div class="grid cols-2">
+                <label class="span-2">Fahrzeugbild hochladen<input id="imageInput" type="file" accept="image/*" /></label>
+                <div id="imagePreview" class="image-preview span-2">Kein Fahrzeugbild hinterlegt</div>
+              </div>
+            </section>
+
+            <footer class="form-footer">
+              <button type="submit" class="primary">Speichern</button>
+              <button type="button" id="deleteBtn" class="danger">Fahrzeug löschen</button>
+            </footer>
+          </form>
+        </section>
+      </main>
+    </div>
 
     <script src="./script.js"></script>
   </body>
