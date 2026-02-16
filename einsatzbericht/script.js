@@ -321,6 +321,12 @@ function prevSection(step) {
   }
 }
 
+function toggleReserveArea(isEnabled) {
+  const block = document.getElementById('unassignedTeamBlock');
+  if (!block) return;
+  block.style.display = isEnabled ? 'block' : 'none';
+}
+
 
 function updateProgress(step) {
   document.querySelectorAll(".step").forEach((el, index) => {
@@ -623,6 +629,11 @@ function renderAssignmentAccordions(selectedCards) {
 }
 
 function openUnassignedTeamModal() {
+  const toggle = document.getElementById('toggleReserveArea');
+  if (toggle && !toggle.checked) {
+    toggle.checked = true;
+    toggleReserveArea(true);
+  }
   teamModalMode = 'unassigned';
   currentSeatBox = null;
   document.getElementById("teamModal").classList.add("active");
@@ -1440,6 +1451,8 @@ async function sendDiscordWebhook(formData) {
 window.addEventListener('load', () => {
   updateRgVisibility();
   initInjuryToggles();
+  const reserveToggle = document.getElementById('toggleReserveArea');
+  toggleReserveArea(!!reserveToggle?.checked);
 });
 
 // Nur Datum setzen (yyyy-mm-dd) – für <input type="date">

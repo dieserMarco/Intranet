@@ -518,3 +518,71 @@ button,
 .unassigned-team-block .primary { width: 100%; }
 
 
+
+.team-mode-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+.unassigned-toggle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .9rem;
+  color: var(--muted);
+}
+.unassigned-toggle-inline input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+/* Step 5 – modernere Übersicht */
+#summaryContainer .overview-container {
+  padding: 16px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+}
+#summaryContainer .overview-section {
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.18);
+  padding: 12px;
+}
+#summaryContainer .overview-section h2 {
+  margin-bottom: 10px;
+  font-size: 1.02rem;
+  color: rgba(255, 215, 215, 0.98);
+}
+#summaryContainer .overview-item {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 8px 0;
+}
+#summaryContainer .overview-item .label {
+  color: rgba(255,255,255,0.78);
+  font-weight: 700;
+}
+#summaryContainer .overview-item span:last-child {
+  text-align: left;
+  color: var(--text);
+  line-height: 1.35;
+  max-width: none;
+  overflow-wrap: anywhere;
+}
+#summaryContainer .overview-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+#summaryContainer .overview-section li { margin-bottom: 6px; }
+
+@media (max-width: 700px) {
+  #summaryContainer .overview-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

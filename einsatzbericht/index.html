@@ -431,7 +431,14 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
-    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block">
+    <div class="team-mode-row">
+      <label class="unassigned-toggle-inline">
+        <input type="checkbox" id="toggleReserveArea" onchange="toggleReserveArea(this.checked)">
+        <span>Warte-/Reservebereich (ohne Fahrzeugzuweisung) anzeigen</span>
+      </label>
+    </div>
+
+    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block" style="display:none;">
       <h2>Warte-/Reservebereich (Feuerwehrhaus)</h2>
       <div class="slot-display" id="unassignedCount">Mitglieder: 0</div>
       <div id="unassignedTeamList" class="seat-container"></div>
