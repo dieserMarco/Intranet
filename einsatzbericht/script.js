@@ -228,6 +228,15 @@ document.getElementById("objektSelect").addEventListener("blur", () => {
 });
 window.addEventListener("load", async () => { await loadObjekteData(); });
 
+function initInjuryToggles() {
+  ['personen', 'feuerwehr', 'tiere'].forEach(category => {
+    const checkbox = document.getElementById(`injuryToggle-${category}`);
+    if (!checkbox) return;
+    toggleInjuryCategory(category, checkbox.checked);
+  });
+}
+
+
 /* ---------------- Gemeinsame Funktion für Radio-Buttons ---------------- */
 function toggleButton(button, group) {
   const buttonGroup = document.getElementById(`${group}-buttons`).querySelectorAll('.radio-button');
@@ -312,6 +321,13 @@ function prevSection(step) {
   }
 }
 
+function toggleReserveArea(isEnabled) {
+  const block = document.getElementById('unassignedTeamBlock');
+  if (!block) return;
+  block.style.display = isEnabled ? 'block' : 'none';
+}
+
+
 function updateProgress(step) {
   document.querySelectorAll(".step").forEach((el, index) => {
     if (index+1 === step) {
@@ -350,21 +366,22 @@ function saveSelection(type) {
 }
 
 /* ---------------- Funktionen für Verletzte (Step 2) ---------------- */
-function toggleVerletzte(category, isYes, btn) {
-  let containerId = "additional-" + category;
-  let container = document.getElementById(containerId);
-  container.style.display = isYes ? "block" : "none";
-  let groupId;
-  if (category === "personen") {
-    groupId = "verletztePersonen-buttons";
-  } else if (category === "feuerwehr") {
-    groupId = "verletzteFeuerwehr-buttons";
-  } else if (category === "tiere") {
-    groupId = "verletzteTiere-buttons";
+function toggleInjuryCategory(category, isActive) {
+  const container = document.getElementById(`additional-${category}`);
+  if (!container) return;
+
+  container.style.display = isActive ? 'block' : 'none';
+
+  if (!isActive) {
+    container.querySelectorAll('input[type="number"]').forEach(input => {
+      input.value = '';
+    });
   }
-  let buttons = document.getElementById(groupId).querySelectorAll('.radio-button');
-  buttons.forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+}
+
+// Rückwärtskompatibel, falls noch alte Aufrufe existieren
+function toggleVerletzte(category, isYes) {
+  toggleInjuryCategory(category, isYes);
 }
 
 /* ---------------- Fahrzeug- & Mannschaftszuweisung ---------------- */
@@ -376,9 +393,18 @@ let teamData = [];
 let globalAssigned = [];
 var savedAssignments = {};
 let currentSeatBox = null;
+const UNASSIGNED_KEY = '__unassigned__';
+let teamModalMode = 'seat';
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
+
+const VEHICLE_STATUS_SEQUENCE = ['EB', 'BEB', 'NEB'];
+const VEHICLE_STATUS_LABELS = {
+  EB: 'Einsatzbereit',
+  BEB: 'Bedingt einsatzbereit',
+  NEB: 'Nicht einsatzbereit'
+};
 
 document.addEventListener("DOMContentLoaded", function() {
   fetch(vehicleCsvUrl)
@@ -448,41 +474,41 @@ function renderVehicleList() {
         const funkrufname = vehicle["Funkrufname"] || "Ohne Funkrufname";
         vehicleMapping[kennzeichen] = funkrufname;
 
-        const status = vehicle["Status"] ? vehicle["Status"].trim() : "";
+        const status = vehicle["Status"] ? vehicle["Status"].trim().toUpperCase() : "EB";
         const seats = vehicle["Anzahl-Sitzplätze"] ? parseInt(vehicle["Anzahl-Sitzplätze"]) : 0;
 
         const card = document.createElement("div");
         card.classList.add("vehicle-card");
         card.setAttribute("data-seats", seats);
         card.setAttribute("data-selected", "false");
-
-        if (status === "NEB") {
-          card.classList.add("disabled");
-          card.style.borderColor = "red";
-        } else if (status === "BEB") {
-          card.style.borderColor = "orange";
-        } else if (status === "EB") {
-          card.style.borderColor = "green";
-        }
+        card.setAttribute("data-kennzeichen", kennzeichen);
 
         card.innerHTML = `
-          <div class="vehicle-info">
-            <strong>${funkrufname}</strong><br>
-            <small>${kennzeichen}</small>
+          <div class="vehicle-head">
+            <div class="vehicle-info">
+              <strong>${funkrufname}</strong>
+            </div>
+            <div class="vehicle-actions">
+              <button type="button" class="vehicle-plate-btn" disabled>${kennzeichen}</button>
+              <button type="button" class="vehicle-status-btn">EB</button>
+              <button type="button" class="vehicle-seats-btn" disabled>Sitzplätze: ${Number.isFinite(seats) ? seats : 0}</button>
+            </div>
           </div>
-          <button class="select-vehicle-button">Auswählen</button>
         `;
 
-        const btn = card.querySelector(".select-vehicle-button");
-        btn.addEventListener("click", function(e) {
+        setVehicleStatus(card, status);
+
+        const statusBtn = card.querySelector(".vehicle-status-btn");
+        statusBtn.addEventListener("click", function(e) {
           e.stopPropagation();
-          if (!card.classList.contains("disabled")) {
-            toggleVehicleSelection(card);
-          }
+          cycleVehicleStatus(card);
         });
 
         card.addEventListener("click", function(e) {
-          if (!e.target.classList.contains("select-vehicle-button") && !card.classList.contains("disabled")) {
+          if (e.target.closest(".vehicle-status-btn") || e.target.closest(".vehicle-plate-btn") || e.target.closest(".vehicle-seats-btn")) {
+            return;
+          }
+          if (!card.classList.contains("disabled")) {
             toggleVehicleSelection(card);
           }
         });
@@ -495,18 +521,43 @@ function renderVehicleList() {
   });
 }
 
+function setVehicleStatus(card, status) {
+  const normalized = VEHICLE_STATUS_SEQUENCE.includes(status) ? status : 'EB';
+  card.classList.remove('status-eb', 'status-beb', 'status-neb', 'disabled');
+  card.classList.add(`status-${normalized.toLowerCase()}`);
+  card.setAttribute('data-status', normalized);
+
+  const statusButton = card.querySelector('.vehicle-status-btn');
+  if (statusButton) {
+    statusButton.textContent = normalized;
+    statusButton.title = VEHICLE_STATUS_LABELS[normalized];
+  }
+
+  if (normalized === 'NEB') {
+    card.classList.add('disabled');
+    if (card.getAttribute('data-selected') === 'true') {
+      toggleVehicleSelection(card);
+    }
+  }
+}
+
+function cycleVehicleStatus(card) {
+  const current = card.getAttribute('data-status') || 'EB';
+  const currentIndex = VEHICLE_STATUS_SEQUENCE.indexOf(current);
+  const nextStatus = VEHICLE_STATUS_SEQUENCE[(currentIndex + 1) % VEHICLE_STATUS_SEQUENCE.length];
+  setVehicleStatus(card, nextStatus);
+}
+
 function toggleVehicleSelection(card) {
   const isSelected = card.getAttribute("data-selected") === "true";
-  const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+  const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-info small")?.innerText || "";
   if (isSelected) {
     card.setAttribute("data-selected", "false");
     card.classList.remove("selected");
-    card.querySelector(".select-vehicle-button").textContent = "Auswählen";
     delete savedAssignments[kennzeichen];
   } else {
     card.setAttribute("data-selected", "true");
     card.classList.add("selected");
-    card.querySelector(".select-vehicle-button").textContent = "Ausgewählt";
   }
 }
 
@@ -520,13 +571,19 @@ function prepareTeamAssignment() {
     return;
   }
   selectedCards.forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     if (savedAssignments[kennzeichen]) {
       Object.values(savedAssignments[kennzeichen]).forEach(assignment => {
         globalAssigned.push(assignment.memberId);
       });
     }
   });
+  if (savedAssignments[UNASSIGNED_KEY]) {
+    Object.values(savedAssignments[UNASSIGNED_KEY]).forEach(assignment => {
+      globalAssigned.push(assignment.memberId);
+    });
+  }
+  renderUnassignedTeamList();
   renderAssignmentAccordions(selectedCards);
   nextSection(3);
 }
@@ -534,7 +591,7 @@ function prepareTeamAssignment() {
 function renderAssignmentAccordions(selectedCards) {
   const container = document.getElementById("assignmentContainer");
   selectedCards.forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     const funkrufname = card.querySelector(".vehicle-info strong").innerText;
     const seats = parseInt(card.getAttribute("data-seats"));
     const acc = document.createElement("div");
@@ -571,7 +628,59 @@ function renderAssignmentAccordions(selectedCards) {
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
 }
 
+function openUnassignedTeamModal() {
+  const toggle = document.getElementById('toggleReserveArea');
+  if (toggle && !toggle.checked) {
+    toggle.checked = true;
+    toggleReserveArea(true);
+  }
+  teamModalMode = 'unassigned';
+  currentSeatBox = null;
+  document.getElementById("teamModal").classList.add("active");
+  document.getElementById("teamSearch").value = "";
+  renderTeamModalList("");
+}
+
+function renderUnassignedTeamList() {
+  const list = document.getElementById('unassignedTeamList');
+  const count = document.getElementById('unassignedCount');
+  if (!list || !count) return;
+
+  list.innerHTML = '';
+  const entries = savedAssignments[UNASSIGNED_KEY] ? Object.entries(savedAssignments[UNASSIGNED_KEY]) : [];
+  count.textContent = `Mitglieder: ${entries.length}`;
+
+  entries.forEach(([seatIndex, assignment]) => {
+    const seat = document.createElement('div');
+    seat.classList.add('seat');
+    seat.setAttribute('data-vehicle', UNASSIGNED_KEY);
+    seat.setAttribute('data-seat-index', seatIndex);
+    seat.setAttribute('data-assigned', 'true');
+    seat.setAttribute('data-role', assignment.role);
+    seat.setAttribute('data-member-id', assignment.memberId);
+    seat.innerHTML = `<div class="assigned-member">
+      <span class="member-name">${assignment.displayText}</span>
+      <div class="member-right">
+        <span class="member-role" onclick="editRole(this)">${assignment.role}</span>
+        <span class="remove-assignment" onclick="removeAssignmentFromButton(event, this)">&times;</span>
+      </div>
+    </div>`;
+    updateSeatColor(seat, assignment.role);
+    list.appendChild(seat);
+  });
+}
+
+function assignUnassignedMember(memberId, displayText, role) {
+  if (!savedAssignments[UNASSIGNED_KEY]) savedAssignments[UNASSIGNED_KEY] = {};
+  const seatIndex = Date.now().toString();
+  savedAssignments[UNASSIGNED_KEY][seatIndex] = { memberId, displayText, role };
+  globalAssigned.push(memberId);
+  renderUnassignedTeamList();
+  updateSummary();
+}
+
 function openTeamModal(button) {
+  teamModalMode = "seat";
   currentSeatBox = button.parentElement;
   document.getElementById("teamModal").classList.add("active");
   document.getElementById("teamSearch").value = "";
@@ -580,6 +689,7 @@ function openTeamModal(button) {
 
 document.getElementById("closeTeamModal").addEventListener("click", function() {
   document.getElementById("teamModal").classList.remove("active");
+  teamModalMode = "seat";
 });
 
 document.getElementById("teamSearch").addEventListener("input", function() {
@@ -610,8 +720,13 @@ function renderTeamModalList(query) {
       item.textContent = displayText;
 
       item.addEventListener("click", function() {
-        assignTeamMember(id, displayText, selectedRole);
+        if (teamModalMode === "unassigned") {
+          assignUnassignedMember(id, displayText, selectedRole);
+        } else {
+          assignTeamMember(id, displayText, selectedRole);
+        }
         document.getElementById("teamModal").classList.remove("active");
+        teamModalMode = "seat";
       });
 
       listContainer.appendChild(item);
@@ -660,8 +775,12 @@ function removeAssignment(seat) {
   seat.removeAttribute("data-role");
   seat.removeAttribute("data-member-id");
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
-  updateGlobalSlotDisplay(seat.closest(".vehicle-assignment"));
-  sortAssignments(seat.parentElement);
+  if (vehicleKey === UNASSIGNED_KEY) {
+    renderUnassignedTeamList();
+  } else {
+    updateGlobalSlotDisplay(seat.closest(".vehicle-assignment"));
+    sortAssignments(seat.parentElement);
+  }
 }
 
 function removeAssignmentFromButton(e, btn) { e.stopPropagation(); const seat = btn.closest('.seat'); removeAssignment(seat); }
@@ -709,24 +828,16 @@ function updateRole(selectElement) {
   selectElement.parentElement.replaceChild(newSpan, selectElement);
   seat.setAttribute("data-role", newRole);
   updateSeatColor(seat, newRole);
+  if (vehicleKey === UNASSIGNED_KEY) renderUnassignedTeamList();
   updateSummary();
 }
 
 function updateSeatColor(seat, role) {
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
-
-  if (role === "Einsatzleiter") {
-    seat.style.backgroundColor = "#f1c40f";  // Gelb
-  } else if (role === "Maschinist") {
-    seat.style.backgroundColor = "#B0B0B0";  // Grau
-    seat.style.color = "#000";              // Schwarz
-  } else if (role === "Gruppenkommandant") {
-    seat.style.backgroundColor = "#3498db";  // Blau
-  } else {
-    seat.style.backgroundColor = "#e74c3c";  // Rot
-  }
-
-  console.log("Manuelle Farbänderung:", seat.style.backgroundColor);
+  seat.style.backgroundColor = "";
+  seat.style.color = "";
+  if (!role) return;
+  seat.classList.add("role-" + role.toLowerCase());
 }
 
 function sortAssignments(seatContainer) {
@@ -785,7 +896,7 @@ function updateSummary() {
   let vehicleCards = document.querySelectorAll(".vehicle-card[data-selected='true']");
   let fahrzeugeHtml = "";
   vehicleCards.forEach(card => {
-    let kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    let kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     let fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
     fahrzeugeHtml += `<div class="overview-item"><span class="label">Fahrzeug:</span><span contenteditable="true" onblur="updateEditable(this, null)">${fahrzeugName}</span></div>`;
   });
@@ -888,6 +999,57 @@ function getChipValues(containerId) {
   return values.join(", ");
 }
 
+
+function withUnklar(value, fallback = '[unklar]') {
+  const v = (value || '').toString().trim();
+  return v ? v : fallback;
+}
+
+function buildEinsatzberichtText(formData) {
+  const lines = [
+    'Übersicht',
+    `- Einsatz #${withUnklar(formData.id)}`,
+    `- Stichwort: ${withUnklar(formData.einsatzStichwort)}`,
+    `- Objekt: ${withUnklar(formData.objekt)}`,
+    '',
+    'Zeitlinie',
+    `- Alarmierung: ${withUnklar(formData.datum)} ${withUnklar(formData.uhrzeitAlarmierung)}`,
+    `- Einsatzende: ${withUnklar(formData.einsatzEnde)} ${withUnklar(formData.uhrzeitRueckkehr)}`,
+    '',
+    'Ort',
+    `- Adresse: ${withUnklar(formData.einsatzortStrasse)} ${withUnklar(formData.hausnummer, '')}`.trim(),
+    `- PLZ/Bezirk: ${withUnklar(formData.einsatzortPLZ)} ${withUnklar(formData.einsatzortBezirk)}`,
+    '',
+    'Lage & Maßnahmen',
+    `- Lage beim Eintreffen: ${withUnklar(formData.lageEintreffen)}`,
+    `- Maßnahmen: ${withUnklar(formData.massnahmenEinsatzort)}`,
+    `- Bemerkungen: ${withUnklar(formData.bemerkungen)}`,
+    '',
+    'Status',
+    `- Alarmierung: ${withUnklar(formData.alarmierung)}`,
+    `- Wetter: ${withUnklar(formData.wetter)}`,
+    `- Gefahr: ${withUnklar(formData.gefahrenklasse)}`,
+    `- Meldung: ${withUnklar(formData.meldung)}`,
+    `- Anwesend: ${withUnklar(formData.anwesend)}`,
+    '',
+    'Abschluss',
+    `- Bericht erstellt durch: ${anonymizePersonRef(formData.berichtErstelltDurch, 'Bearbeiter:in')}`
+  ];
+
+  return lines.join('\n');
+}
+function anonymizePersonRef(value, fallback = 'Einsatzkraft') {
+  const raw = (value || '').trim();
+  if (!raw) return '–';
+
+  const idMatch = raw.match(/^(\d{1,8})\b/);
+  if (idMatch) {
+    return `Mitglied #${idMatch[1]}`;
+  }
+
+  return fallback;
+}
+
 /* ---------------- Neue Funktionen für Absenden & Speichern ---------------- */
 
 // Sammelt alle relevanten Formulardaten in einem Objekt
@@ -895,7 +1057,7 @@ function gatherFormData() {
   // Hier werden die ausgewählten Fahrzeuge gesammelt
   const selectedVehicles = [];
   document.querySelectorAll(".vehicle-card[data-selected='true']").forEach(card => {
-    const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+    const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
     const fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
     selectedVehicles.push({ kennzeichen, fahrzeugName });
   });
@@ -950,7 +1112,7 @@ function gatherFormData() {
 
     // Fahrzeuge (Step 3)
     fahrzeuge: Array.from(document.querySelectorAll(".vehicle-card[data-selected='true']")).map(card => {
-      const kennzeichen = card.querySelector(".vehicle-info small").innerText;
+      const kennzeichen = card.getAttribute("data-kennzeichen") || card.querySelector(".vehicle-plate-btn")?.innerText || "";
       const fahrzeugName = vehicleMapping[kennzeichen] || kennzeichen;
       return { kennzeichen, fahrzeugName };
     }),
@@ -1201,7 +1363,7 @@ async function sendDiscordWebhook(formData) {
   // Mannschaft auflisten
   const mannschaftList = Object.values(formData.savedAssignments)
     .flatMap(seats => Object.values(seats))
-    .map(a => `• ${a.displayText} – ${a.role}`)
+    .map(a => `• ${anonymizePersonRef(a.displayText)} – ${a.role || 'Rolle'}`)
     .join('\n') || '–';
 
   const embed = {
@@ -1264,8 +1426,11 @@ async function sendDiscordWebhook(formData) {
         `• Bemerkungen:${formData.bemerkungen          || '–'}`
       ),
 
-      // 7) ganz unten: Wer hat’s erstellt?
-      f('👤 Bericht erstellt durch', formData.berichtErstelltDurch)
+      // 7) Überarbeiteter Einsatzbericht als kompakter Block
+      f('🧾 Einsatzbericht (final)', buildEinsatzberichtText(formData)),
+
+      // 8) ganz unten: Wer hat’s erstellt?
+      f('👤 Bericht erstellt durch', anonymizePersonRef(formData.berichtErstelltDurch, 'Bearbeiter:in'))
     ],
     timestamp: new Date().toISOString()
   };
@@ -1285,6 +1450,9 @@ async function sendDiscordWebhook(formData) {
 // ---------------- Initiale Sichtbarkeit beim Laden sicherstellen ----------------
 window.addEventListener('load', () => {
   updateRgVisibility();
+  initInjuryToggles();
+  const reserveToggle = document.getElementById('toggleReserveArea');
+  toggleReserveArea(!!reserveToggle?.checked);
 });
 
 // Nur Datum setzen (yyyy-mm-dd) – für <input type="date">
