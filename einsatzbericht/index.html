@@ -431,18 +431,11 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
-    <div class="team-mode-row">
-      <label class="unassigned-toggle-inline">
-        <input type="checkbox" id="toggleUnassignedMode" onchange="toggleUnassignedMode(this.checked)">
-        <span>Mannschaft ohne Fahrzeugzuweisung</span>
-      </label>
-    </div>
-
-    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block" style="display:none;">
-      <h2>Mannschaft ohne Fahrzeugzuweisung</h2>
+    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block">
+      <h2>Warte-/Reservebereich (Feuerwehrhaus)</h2>
       <div class="slot-display" id="unassignedCount">Mitglieder: 0</div>
       <div id="unassignedTeamList" class="seat-container"></div>
-      <button type="button" class="primary" onclick="openUnassignedTeamModal()">+ Mitglied ohne Fahrzeug hinzufügen</button>
+      <button type="button" class="primary" onclick="openUnassignedTeamModal()">+ Mitglied in Warte-/Reservebereich hinzufügen</button>
     </div>
 
     <div id="assignmentContainer"></div>
