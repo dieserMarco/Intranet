@@ -537,18 +537,18 @@ button,
   accent-color: var(--accent);
 }
 
-/* Step 5 – modernere Übersicht */
+/* Step 5 – moderne Übersicht mit klaren Einzel-Feldern */
 #summaryContainer .overview-container {
   padding: 16px;
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
 }
 #summaryContainer .overview-section {
   margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 14px;
-  background: rgba(0,0,0,0.18);
+  background: rgba(0,0,0,0.16);
   padding: 12px;
 }
 #summaryContainer .overview-section h2 {
@@ -559,10 +559,15 @@ button,
 #summaryContainer .overview-item {
   display: grid;
   grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   align-items: start;
-  padding: 8px 0;
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
 }
+#summaryContainer .overview-item:last-child { margin-bottom: 0; }
 #summaryContainer .overview-item .label {
   color: rgba(255,255,255,0.78);
   font-weight: 700;
@@ -578,8 +583,10 @@ button,
   margin: 0;
   padding-left: 18px;
 }
-#summaryContainer .overview-section li { margin-bottom: 6px; }
-
+#summaryContainer .overview-section li {
+  margin-bottom: 6px;
+  padding: 4px 0;
+}
 @media (max-width: 700px) {
   #summaryContainer .overview-item {
     grid-template-columns: 1fr;
