@@ -431,6 +431,13 @@
   
   <!-- Step 4: Mannschaft -->
   <div class="container" id="section4">
+    <div id="unassignedTeamBlock" class="vehicle-assignment unassigned-team-block">
+      <h2>Mannschaft ohne Fahrzeugzuweisung</h2>
+      <div class="slot-display" id="unassignedCount">Mitglieder: 0</div>
+      <div id="unassignedTeamList" class="seat-container"></div>
+      <button type="button" class="primary" onclick="openUnassignedTeamModal()">+ Mitglied ohne Fahrzeug hinzufügen</button>
+    </div>
+
     <div id="assignmentContainer"></div>
     <div class="button-container team-actions">
       <button type="button" class="zurueck-button" onclick="prevSection(4)">Zurück</button>

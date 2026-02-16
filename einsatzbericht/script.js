@@ -322,7 +322,7 @@ function prevSection(step) {
 }
 
 function skipTeamAssignment() {
-  if (!confirm('Ohne Mannschafts-Zuteilung zur Übersicht wechseln?')) return;
+  if (!confirm('Ohne Fahrzeug-Zuteilung zur Übersicht wechseln? Bereits gewählte Mannschaft ohne Fahrzeug bleibt erhalten.')) return;
   nextSection(4);
 }
 
@@ -392,6 +392,8 @@ let teamData = [];
 let globalAssigned = [];
 var savedAssignments = {};
 let currentSeatBox = null;
+const UNASSIGNED_KEY = '__unassigned__';
+let teamModalMode = 'seat';
 
 // Globales Mapping: Kennzeichen → Fahrzeugbezeichnung
 let vehicleMapping = {};
@@ -575,6 +577,12 @@ function prepareTeamAssignment() {
       });
     }
   });
+  if (savedAssignments[UNASSIGNED_KEY]) {
+    Object.values(savedAssignments[UNASSIGNED_KEY]).forEach(assignment => {
+      globalAssigned.push(assignment.memberId);
+    });
+  }
+  renderUnassignedTeamList();
   renderAssignmentAccordions(selectedCards);
   nextSection(3);
 }
@@ -619,7 +627,54 @@ function renderAssignmentAccordions(selectedCards) {
   document.querySelectorAll(".vehicle-assignment").forEach(va => updateGlobalSlotDisplay(va));
 }
 
+function openUnassignedTeamModal() {
+  teamModalMode = 'unassigned';
+  currentSeatBox = null;
+  document.getElementById("teamModal").classList.add("active");
+  document.getElementById("teamSearch").value = "";
+  renderTeamModalList("");
+}
+
+function renderUnassignedTeamList() {
+  const list = document.getElementById('unassignedTeamList');
+  const count = document.getElementById('unassignedCount');
+  if (!list || !count) return;
+
+  list.innerHTML = '';
+  const entries = savedAssignments[UNASSIGNED_KEY] ? Object.entries(savedAssignments[UNASSIGNED_KEY]) : [];
+  count.textContent = `Mitglieder: ${entries.length}`;
+
+  entries.forEach(([seatIndex, assignment]) => {
+    const seat = document.createElement('div');
+    seat.classList.add('seat');
+    seat.setAttribute('data-vehicle', UNASSIGNED_KEY);
+    seat.setAttribute('data-seat-index', seatIndex);
+    seat.setAttribute('data-assigned', 'true');
+    seat.setAttribute('data-role', assignment.role);
+    seat.setAttribute('data-member-id', assignment.memberId);
+    seat.innerHTML = `<div class="assigned-member">
+      <span class="member-name">${assignment.displayText}</span>
+      <div class="member-right">
+        <span class="member-role" onclick="editRole(this)">${assignment.role}</span>
+        <span class="remove-assignment" onclick="removeAssignmentFromButton(event, this)">&times;</span>
+      </div>
+    </div>`;
+    updateSeatColor(seat, assignment.role);
+    list.appendChild(seat);
+  });
+}
+
+function assignUnassignedMember(memberId, displayText, role) {
+  if (!savedAssignments[UNASSIGNED_KEY]) savedAssignments[UNASSIGNED_KEY] = {};
+  const seatIndex = Date.now().toString();
+  savedAssignments[UNASSIGNED_KEY][seatIndex] = { memberId, displayText, role };
+  globalAssigned.push(memberId);
+  renderUnassignedTeamList();
+  updateSummary();
+}
+
 function openTeamModal(button) {
+  teamModalMode = "seat";
   currentSeatBox = button.parentElement;
   document.getElementById("teamModal").classList.add("active");
   document.getElementById("teamSearch").value = "";
@@ -628,6 +683,7 @@ function openTeamModal(button) {
 
 document.getElementById("closeTeamModal").addEventListener("click", function() {
   document.getElementById("teamModal").classList.remove("active");
+  teamModalMode = "seat";
 });
 
 document.getElementById("teamSearch").addEventListener("input", function() {
@@ -658,8 +714,13 @@ function renderTeamModalList(query) {
       item.textContent = displayText;
 
       item.addEventListener("click", function() {
-        assignTeamMember(id, displayText, selectedRole);
+        if (teamModalMode === "unassigned") {
+          assignUnassignedMember(id, displayText, selectedRole);
+        } else {
+          assignTeamMember(id, displayText, selectedRole);
+        }
         document.getElementById("teamModal").classList.remove("active");
+        teamModalMode = "seat";
       });
 
       listContainer.appendChild(item);
@@ -708,8 +769,12 @@ function removeAssignment(seat) {
   seat.removeAttribute("data-role");
   seat.removeAttribute("data-member-id");
   seat.classList.remove("role-einsatzleiter", "role-maschinist", "role-gruppenkommandant", "role-mannschaft");
-  updateGlobalSlotDisplay(seat.closest(".vehicle-assignment"));
-  sortAssignments(seat.parentElement);
+  if (vehicleKey === UNASSIGNED_KEY) {
+    renderUnassignedTeamList();
+  } else {
+    updateGlobalSlotDisplay(seat.closest(".vehicle-assignment"));
+    sortAssignments(seat.parentElement);
+  }
 }
 
 function removeAssignmentFromButton(e, btn) { e.stopPropagation(); const seat = btn.closest('.seat'); removeAssignment(seat); }
@@ -757,6 +822,7 @@ function updateRole(selectElement) {
   selectElement.parentElement.replaceChild(newSpan, selectElement);
   seat.setAttribute("data-role", newRole);
   updateSeatColor(seat, newRole);
+  if (vehicleKey === UNASSIGNED_KEY) renderUnassignedTeamList();
   updateSummary();
 }
 

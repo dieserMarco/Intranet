@@ -512,3 +512,7 @@ button,
 
 .vehicle-actions .vehicle-status-btn{ font-weight:700; }
 .vehicle-card { overflow: hidden; }
+
+.unassigned-team-block { margin-bottom: 12px; }
+.unassigned-team-block .seat-container { margin-bottom: 10px; }
+.unassigned-team-block .primary { width: 100%; }
