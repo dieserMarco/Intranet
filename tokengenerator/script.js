@@ -24,7 +24,7 @@ function setStatus(message, type = '') {
 }
 
 async function saveToken(token, prefix) {
-  const response = await fetch('save_token.php', {
+  const response = await fetch('api/save_token.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,7 +32,14 @@ async function saveToken(token, prefix) {
     body: JSON.stringify({ token, prefix }),
   });
 
-  const data = await response.json();
+  const rawResponse = await response.text();
+  let data = null;
+
+  try {
+    data = JSON.parse(rawResponse);
+  } catch (error) {
+    throw new Error('API-Antwort ist ungültig. Prüfe, ob api/save_token.php korrekt erreichbar ist.');
+  }
 
   if (!response.ok || !data.success) {
     throw new Error(data.message || 'Token konnte nicht gespeichert werden.');
