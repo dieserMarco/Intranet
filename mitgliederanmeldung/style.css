@@ -1,3 +1,5 @@
+@import url("../resources/intranet-theme.css");
+
 :root{
   --bg: #0b0b10;
   --card: rgba(255,255,255,.08);
@@ -437,4 +439,17 @@ body.member-signup select:focus{
 
 #successPopout .popout__btn:active{
   transform: translateY(1px);
+}
+
+/* === Intranet Unified Look === */
+body.member-signup {
+  color: var(--ff-text);
+}
+
+.card,
+.theme,
+.msg,
+.summaryHero,
+.summaryCard {
+  border-color: var(--ff-line);
 }
