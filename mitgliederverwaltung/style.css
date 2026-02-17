@@ -1,3 +1,5 @@
+@import url("../resources/intranet-theme.css");
+
 :root {
   --bg: #0b0b10;
   --card: rgba(255, 255, 255, 0.08);
@@ -339,4 +341,16 @@ button:disabled {
   .header { flex-direction: column; align-items: stretch; }
   .group-grid { grid-template-columns: 1fr; }
   .field-span-2 { grid-column: span 1; }
+}
+/* === Intranet Unified Look === */
+body.member-management {
+  color: var(--ff-text);
+}
+
+.card,
+.header,
+.data-group,
+.course-card,
+.save-modal {
+  border-color: var(--ff-line);
 }

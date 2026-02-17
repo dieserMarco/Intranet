@@ -1,3 +1,5 @@
+@import url("../resources/intranet-theme.css");
+
 :root {
   --text: #eef2f9;
   --muted: #b7c2d8;
@@ -304,3 +306,24 @@ textarea { resize: vertical; }
   .form-footer { flex-direction: column; }
   .actions { grid-template-columns: 1fr; }
 }
+
+/* === Intranet Unified Look === */
+body.fleet-page {
+  color: var(--ff-text);
+}
+
+.module-brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.module-brand-logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+}
+
+.module-brand h1 { margin: 0; }
+.module-brand p { margin: 2px 0 0; }
