@@ -1,6 +1,5 @@
-const btn = document.getElementById("btn");
-const out = document.getElementById("out");
-
-btn.addEventListener("click", () => {
-  out.textContent = "Button wurde geklickt: " + new Date().toLocaleTimeString();
-});
+(function loadBundledScript() {
+  const script = document.createElement('script');
+  script.src = 'js/script.js';
+  document.body.appendChild(script);
+})();
