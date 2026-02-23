@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FFWN – Kassenbuch</title>
+  <link rel="stylesheet" href="kassenbuch.css" />
+</head>
+
+<body class="cashbook">
+  <div class="bg">
+    <div class="bg__overlay"></div>
+    <div class="bg__noise"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__badge">
+        <img src="resources/logo.png" alt="FFWN Logo" referrerpolicy="no-referrer">
+      </div>
+      <div class="brand__txt">
+        <div class="brand__title">Finanzverwaltung</div>
+        <div class="brand__sub">Feuerwehr Wiener Neustadt · Kassenbuch</div>
+      </div>
+    </div>
+
+    <button id="themeToggle" class="theme" type="button" aria-label="Theme wechseln">
+      <span class="theme__dot"></span>
+      <span id="themeLabel" class="theme__label">Dark</span>
+    </button>
+  </header>
+
+  <main class="wrap">
+    <!-- Buchung erfassen -->
+    <section class="card">
+      <div class="card__head">
+        <h1>Buchung erfassen</h1>
+        <p class="muted">Einnahme / Ausgabe erfassen und bei Bedarf „Verbuchen“ für finale Buchung.</p>
+      </div>
+
+      <div class="form">
+        <div class="grid grid--5">
+          <div class="field">
+            <label for="receipt_no">Rechnungsnummer</label>
+            <input id="receipt_no" type="text" placeholder="z.B. RE-2026-0001">
+          </div>
+
+          <div class="field">
+            <label for="type">Typ <span class="req">*</span></label>
+            <select id="type">
+              <option value="EINNAHME">Einnahme</option>
+              <option value="AUSGABE">Ausgabe</option>
+              <option value="VERMOEGEN">Vermögen</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="amount">Betrag (EUR) <span class="req">*</span></label>
+            <input id="amount" type="number" step="0.01" placeholder="0.00">
+          </div>
+
+          <div class="field">
+            <label for="date">Datum <span class="req">*</span></label>
+            <input id="date" type="date">
+          </div>
+
+          <div class="field">
+            <label for="created_by">Erstellt von</label>
+            <input id="created_by" type="text" placeholder="Name / Kürzel">
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label for="description">Beschreibung</label>
+          <textarea id="description" rows="4" placeholder="Wofür war die Buchung? (Details für Nachvollziehbarkeit)"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn--primary" id="saveBtn" type="button">
+            Speichern <span class="btn__shine"></span>
+          </button>
+        </div>
+
+        <div id="msgOk" class="msg msg--ok" role="status" aria-live="polite"></div>
+        <div id="msgErr" class="msg msg--err" role="alert" aria-live="assertive"></div>
+
+        <div class="hintLine muted">
+          Tipp: Status „Erfasst“ = noch in Bearbeitung, „Verbucht“ = final, „Storniert“ bleibt sichtbar (optional) aber wirkt nicht auf Summen.
+        </div>
+      </div>
+    </section>
+
+    <!-- Zeitraum & Ausdruck -->
+    <section class="card" style="margin-top:14px">
+      <div class="card__head">
+        <h1>Zeitraum & Ausdruck</h1>
+      </div>
+
+      <div class="form">
+        <div class="grid grid--4">
+          <div class="field">
+            <label for="from">Von</label>
+            <input id="from" type="date">
+          </div>
+
+          <div class="field">
+            <label for="to">Bis</label>
+            <input id="to" type="date">
+          </div>
+
+          <div class="field">
+            <label for="q">Suche</label>
+            <input id="q" type="text" placeholder="Rechnungsnr. oder Text…">
+          </div>
+
+          <div class="field">
+            <label for="filterType">Typ</label>
+            <select id="filterType">
+              <option value="">Alle</option>
+              <option value="EINNAHME">Einnahme</option>
+              <option value="AUSGABE">Ausgabe</option>
+              <option value="VERMOEGEN">Vermögen</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="check">
+            <input id="showStorno" type="checkbox">
+            <span>Stornierte anzeigen</span>
+          </label>
+
+          <div class="row__spacer"></div>
+
+          <button class="btn" id="filterBtn" type="button">Filtern</button>
+          <button class="btn btn--primary" id="printBtn" type="button">
+            Ausdruck erstellen <span class="btn__shine"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summen -->
+    <section class="stats">
+      <div class="stat">
+        <div class="stat__k">Gesamteinnahmen</div>
+        <div class="stat__v" id="sumIncome">0,00 €</div>
+      </div>
+      <div class="stat">
+        <div class="stat__k">Gesamtausgaben</div>
+        <div class="stat__v" id="sumExpense">0,00 €</div>
+      </div>
+      <div class="stat">
+        <div class="stat__k">Kontostand</div>
+        <div class="stat__v" id="sumBalance">0,00 €</div>
+      </div>
+    </section>
+
+    <!-- Alle Buchungen -->
+    <section class="card" style="margin-top:14px">
+      <div class="card__head">
+        <h1>Alle Buchungen</h1>
+        <p class="muted">Jeder Ein- und Ausgang in der Übersicht. (Max. 2000 pro Filterabfrage)</p>
+      </div>
+
+      <div class="tableWrap">
+        <table class="tbl" id="tbl">
+          <thead>
+            <tr>
+              <th style="width:70px">ID</th>
+              <th>Rechnungsnummer</th>
+              <th style="width:120px">Typ</th>
+              <th>Beschreibung</th>
+              <th style="width:140px">Betrag</th>
+              <th style="width:130px">Datum</th>
+              <th style="width:160px">Erstellt von</th>
+              <th style="width:130px">Status</th>
+              <th style="width:160px">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span class="muted">Feuerwehr Wiener Neustadt · Intranet System</span>
+    </footer>
+  </main>
+
+  <script type="module" src="kassenbuch.js"></script>
+</body>
+</html>
